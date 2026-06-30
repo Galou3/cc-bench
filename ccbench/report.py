@@ -20,7 +20,7 @@ import csv
 import io
 from typing import Sequence
 
-from .analysis import compare, summarize_condition
+from .analysis import compare_all, summarize_condition
 from .models import Condition, RunResult, SuiteRun
 
 _MOCK_BANNER = (
@@ -61,6 +61,7 @@ def render_markdown(
     confidence: float = 0.95,
     bootstrap_iters: int = 5000,
     seed: int = 0,
+    correction: str = "holm",
 ) -> str:
     """Render a full Markdown report. ``conditions`` (optional) adds rationale/citations."""
     pct = int(round(confidence * 100))
@@ -98,30 +99,34 @@ def render_markdown(
         )
     lines.append("")
 
-    # Comparisons vs baseline
+    # Comparisons vs baseline (with multiple-comparison correction)
     lines.append(f"## Change vs baseline `{base}`")
     lines.append("")
-    lines.append(f"| Condition | delta pass rate | {pct}% CI (bootstrap) | p-value | verdict |")
-    lines.append("|---|---:|---:|---:|:--|")
+    lines.append(
+        f"| Condition | delta pass rate | {pct}% CI (bootstrap) | p (raw) | p ({correction}) | verdict |"
+    )
+    lines.append("|---|---:|---:|---:|---:|:--|")
     base_results = suite_run.for_condition(base)
-    for name in suite_run.conditions:
-        if name == base:
-            continue
-        cmp = compare(
-            base_results, suite_run.for_condition(name), base, name,
-            confidence=confidence, bootstrap_iters=bootstrap_iters, seed=seed,
-        )
+    variants = [(name, suite_run.for_condition(name)) for name in suite_run.conditions if name != base]
+    comps = compare_all(
+        base, base_results, variants,
+        confidence=confidence, bootstrap_iters=bootstrap_iters, seed=seed, correction=correction,
+    )
+    for cmp in comps:
         mark = {"improvement": "[+] improvement", "regression": "[-] regression",
                 "not proven": "[~] not proven"}[cmp.verdict]
+        padj = cmp.p_adjusted if cmp.p_adjusted is not None else cmp.p_value
         lines.append(
-            f"| `{name}` | {cmp.diff:+.1%} | [{cmp.diff_ci_low:+.1%}, {cmp.diff_ci_high:+.1%}] | "
-            f"{cmp.p_value:.4f} | {mark} |"
+            f"| `{cmp.variant}` | {cmp.diff:+.1%} | [{cmp.diff_ci_low:+.1%}, {cmp.diff_ci_high:+.1%}] | "
+            f"{cmp.p_value:.4f} | {padj:.4f} | {mark} |"
         )
     lines.append("")
     lines.append(
         "_Verdict is `improvement`/`regression` only when the difference CI excludes 0 "
-        "**and** p < " + f"{1 - confidence:.2f}. Otherwise `not proven` - usually meaning "
-        "the effect (if any) is smaller than this sample size can resolve: add reps._"
+        f"**and** the {correction}-adjusted p < {1 - confidence:.2f}. Otherwise `not proven` - "
+        "usually meaning the effect (if any) is smaller than this sample size can resolve: "
+        f"add reps. p-values are corrected for testing {len(variants)} variant(s) against one "
+        "baseline._"
     )
     lines.append("")
 

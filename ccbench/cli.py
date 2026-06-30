@@ -13,7 +13,7 @@ from pathlib import Path
 
 from . import __version__
 from .agents import available_agents, make_agent
-from .analysis import compare, summarize_condition
+from .analysis import compare_all, summarize_condition
 from .report import render_csv, render_markdown
 from .runner import load_run, run_suite, save_run
 from .suite import SuiteError, load_conditions
@@ -37,7 +37,7 @@ def _progress(done: int, total: int, rr) -> None:
           f"rep{rr.rep} -> {rr.outcome.value}      ", end=end, flush=True)
 
 
-def _print_summary(run, confidence: float) -> None:
+def _print_summary(run, confidence: float, correction: str = "holm") -> None:
     base = "baseline" if "baseline" in run.conditions else (run.conditions[0] if run.conditions else "")
     print(f"\nResults (suite={run.suite}, agent={run.agent}, n={len(run.results)}):")
     for name in run.conditions:
@@ -45,13 +45,12 @@ def _print_summary(run, confidence: float) -> None:
         print(f"  {name:20} {rs.rate:6.1%}  CI[{rs.ci_low:.1%}, {rs.ci_high:.1%}]  "
               f"({rs.counts.passes}/{rs.counts.decided})")
     if base:
-        print(f"\nvs baseline `{base}`:")
-        for name in run.conditions:
-            if name == base:
-                continue
-            c = compare(run.for_condition(base), run.for_condition(name), base, name,
-                        confidence=confidence)
-            print(f"  {name:20} {c.diff:+6.1%}  p={c.p_value:.4f}  -> {c.verdict}")
+        variants = [(n, run.for_condition(n)) for n in run.conditions if n != base]
+        comps = compare_all(base, run.for_condition(base), variants,
+                            confidence=confidence, correction=correction)
+        print(f"\nvs baseline `{base}` (p adjusted: {correction}):")
+        for c in comps:
+            print(f"  {c.variant:20} {c.diff:+6.1%}  p={c.effective_p:.4f}  -> {c.verdict}")
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
@@ -69,12 +68,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
         keep_workspaces=args.keep_workspaces, progress=_progress,
     )
     out_dir = save_run(run, args.out)
-    _print_summary(run, args.confidence)
+    _print_summary(run, args.confidence, args.correction)
     print(f"\nSaved to {out_dir}  (mirror: {Path(args.out) / 'latest'})")
     if args.report:
         print("\n" + "=" * 70 + "\n")
         print(render_markdown(run, conditions, baseline=args.baseline,
-                              confidence=args.confidence))
+                              confidence=args.confidence, correction=args.correction))
     return 0
 
 
@@ -83,7 +82,8 @@ def _cmd_report(args: argparse.Namespace) -> int:
     conditions = None
     if args.conditions:
         conditions = load_conditions(args.conditions)
-    md = render_markdown(run, conditions, baseline=args.baseline, confidence=args.confidence)
+    md = render_markdown(run, conditions, baseline=args.baseline,
+                         confidence=args.confidence, correction=args.correction)
     if args.out:
         Path(args.out).write_text(md, encoding="utf-8")
         print(f"wrote {args.out}")
@@ -113,6 +113,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--out", default="runs", help="runs root directory")
     r.add_argument("--confidence", type=float, default=0.95)
+    r.add_argument("--correction", default="holm", choices=["none", "holm", "bh", "fdr"],
+                   help="multiple-comparison correction for variant p-values")
     r.add_argument("--baseline", default=None, help="baseline condition name (default: 'baseline' or first)")
     r.add_argument("--report", action="store_true", help="print the full Markdown report after running")
     r.add_argument("--keep-workspaces", default=None, help="keep run workspaces under this dir (debug)")
@@ -127,6 +129,8 @@ def build_parser() -> argparse.ArgumentParser:
     rep.add_argument("--conditions", default=None, help="conditions YAML (adds rationale/citations)")
     rep.add_argument("--baseline", default=None)
     rep.add_argument("--confidence", type=float, default=0.95)
+    rep.add_argument("--correction", default="holm", choices=["none", "holm", "bh", "fdr"],
+                     help="multiple-comparison correction for variant p-values")
     rep.add_argument("--out", default=None, help="write Markdown here instead of stdout")
     rep.add_argument("--csv", default=None, help="also write a per-condition CSV here")
     rep.set_defaults(func=_cmd_report)

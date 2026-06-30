@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import math
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterable, Sequence
 
 from .models import Outcome, RunResult
@@ -209,13 +209,24 @@ class Comparison:
     confidence: float
     n_baseline: int
     n_variant: int
+    # Set by compare_all when several variants share one baseline. The raw
+    # p_value is kept for transparency; significance uses the adjusted one.
+    p_adjusted: float | None = None
+    correction: str = "none"
+
+    @property
+    def effective_p(self) -> float:
+        return self.p_adjusted if self.p_adjusted is not None else self.p_value
 
     @property
     def significant(self) -> bool:
-        """Proven iff the bootstrap diff CI excludes 0 AND the z-test clears alpha."""
+        """Proven iff the bootstrap diff CI excludes 0 AND the (adjusted) z-test
+        p-value clears alpha. Using the adjusted p means that testing more
+        variants makes each one harder to call a win - the honest tax for
+        multiple comparisons."""
         alpha = 1.0 - self.confidence
         ci_excludes_zero = self.diff_ci_low > 0 or self.diff_ci_high < 0
-        return ci_excludes_zero and self.p_value < alpha
+        return ci_excludes_zero and self.effective_p < alpha
 
     @property
     def verdict(self) -> str:
@@ -233,6 +244,8 @@ class Comparison:
             "diff_ci_low": self.diff_ci_low,
             "diff_ci_high": self.diff_ci_high,
             "p_value": self.p_value,
+            "p_adjusted": self.p_adjusted,
+            "correction": self.correction,
             "significant": self.significant,
             "verdict": self.verdict,
             "confidence": self.confidence,
@@ -265,8 +278,90 @@ def compare(
     )
 
 
+# --------------------------------------------------------------------------- #
+# Multiple-comparison correction
+# --------------------------------------------------------------------------- #
+def holm_bonferroni(pvals: Sequence[float]) -> list[float]:
+    """Holm-Bonferroni step-down adjusted p-values, returned in input order.
+
+    Controls the family-wise error rate. Less conservative than plain Bonferroni
+    but still strong control - the right default when each false 'win' is costly.
+    """
+    m = len(pvals)
+    if m == 0:
+        return []
+    order = sorted(range(m), key=lambda i: pvals[i])
+    adj = [0.0] * m
+    running = 0.0
+    for rank, idx in enumerate(order):
+        running = max(running, (m - rank) * pvals[idx])  # monotone non-decreasing
+        adj[idx] = min(1.0, running)
+    return adj
+
+
+def benjamini_hochberg(pvals: Sequence[float]) -> list[float]:
+    """Benjamini-Hochberg FDR-adjusted p-values, in input order.
+
+    Controls the false discovery rate; more powerful than Holm when you expect
+    several real effects and can tolerate a known fraction of false positives.
+    """
+    m = len(pvals)
+    if m == 0:
+        return []
+    order = sorted(range(m), key=lambda i: pvals[i])
+    adj = [0.0] * m
+    prev = 1.0
+    for rank in range(m - 1, -1, -1):  # step-up: largest p to smallest
+        idx = order[rank]
+        prev = min(prev, pvals[idx] * m / (rank + 1))
+        adj[idx] = min(1.0, prev)
+    return adj
+
+
+_CORRECTIONS = {
+    "none": lambda ps: list(ps),
+    "holm": holm_bonferroni,
+    "bh": benjamini_hochberg,
+    "fdr": benjamini_hochberg,
+}
+
+
+def adjust_pvalues(pvals: Sequence[float], method: str = "holm") -> list[float]:
+    try:
+        fn = _CORRECTIONS[method]
+    except KeyError:
+        known = ", ".join(_CORRECTIONS)
+        raise ValueError(f"unknown correction '{method}'; known: {known}") from None
+    return fn(pvals)
+
+
+def compare_all(
+    baseline_name: str,
+    baseline_results: Sequence[RunResult],
+    variants: Sequence[tuple[str, Sequence[RunResult]]],
+    confidence: float = 0.95,
+    bootstrap_iters: int = 5000,
+    seed: int = 0,
+    correction: str = "holm",
+) -> list[Comparison]:
+    """Compare each variant against one baseline, correcting for multiplicity.
+
+    ``variants`` is a sequence of ``(name, results)``. Returns Comparisons in
+    input order, each carrying ``p_adjusted`` and the correction method; their
+    ``significant`` then reflects the corrected p-value.
+    """
+    comps = [
+        compare(baseline_results, res, baseline_name, name,
+                confidence=confidence, bootstrap_iters=bootstrap_iters, seed=seed)
+        for name, res in variants
+    ]
+    adjusted = adjust_pvalues([c.p_value for c in comps], correction)
+    return [replace(c, p_adjusted=a, correction=correction) for c, a in zip(comps, adjusted)]
+
+
 __all__ = [
     "Counts", "count_outcomes", "wilson_interval", "RateSummary",
     "summarize_condition", "two_proportion_p", "bootstrap_diff_ci",
-    "Comparison", "compare",
+    "Comparison", "compare", "holm_bonferroni", "benjamini_hochberg",
+    "adjust_pvalues", "compare_all",
 ]
