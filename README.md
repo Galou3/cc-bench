@@ -134,7 +134,21 @@ ccbench run --suite suites/sample --conditions conditions \
 The adapter calls `claude -p ... --output-format json` in each workspace, parses
 real token/cost usage, and grades independently. Bring your own auth.
 
-## Use it on your own project
+## Use it on your own project (no tasks to write)
+
+The hard part of "measure on your own tasks" is writing the tasks. cc-bench builds
+them from code you already have: point `from-repo` at a tested module and it stubs
+the implementation and holds out your real tests.
+
+```bash
+ccbench from-repo --module src/parser.py --test tests/test_parser.py --id parser
+ccbench run --suite ccbench_suite --conditions conditions --agent claude --reps 10
+```
+
+That is the part no competitor can assemble: your repo becomes the benchmark, then
+you measure which setup changes actually help it.
+
+### Or write a suite by hand
 
 A suite and conditions are just YAML + folders - drop them next to your code:
 
@@ -162,6 +176,7 @@ language-agnostic.
 | Command | What it does |
 |---|---|
 | `ccbench doctor [--fix]` | audit (and safely fix) your `CLAUDE.md` / `AGENTS.md` / `settings.json` against the evidence |
+| `ccbench from-repo --module M --test T --id ID` | turn your own tested code into a held-out task (no task authoring) |
 | `ccbench init` | scaffold a runnable starter suite + conditions into any repo |
 | `ccbench run --agent mock\|claude\|codex` | run a suite across conditions; save a report |
 | `ccbench run --seeds 0,1,2` | multi-seed run -> robustness (mean +/- SD per condition) |

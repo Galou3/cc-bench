@@ -6,6 +6,14 @@ All notable changes to cc-bench are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `ccbench from-repo`: turn your own tested code into held-out tasks (no authoring).
+- `ccbench compare`: head-to-head of two runs (e.g. claude vs codex).
+- Held-out tests (`hidden_tests_dir`) and a `hard` suite (4 tasks) off the ceiling.
+- Multi-seed robustness (`--seeds`), `pass@k`, and a 0-100 `doctor` health score.
+- `doctor` covers `AGENTS.md` (Codex) and flags a CLAUDE.md with no test command.
+- JavaScript sample suite; live GitHub Actions CI; PRIOR_ART competitor map; LAUNCH.md.
+
 ## [0.1.0] - 2026-06-30
 
 First public release.
