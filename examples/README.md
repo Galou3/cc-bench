@@ -19,6 +19,11 @@ It shows the two outcomes that matter:
 Remember: the mock uses *injected* probabilities, so this proves the harness can
 *detect* an effect — not anything about a real agent. Use `--agent claude` for real.
 
+**Real run:** [`real-claude-report.md`](real-claude-report.md) is an actual run
+against the live `claude` CLI (haiku-4.5, ~$0.86). Both conditions hit 100% →
+honest **"not proven"**: these tasks are too easy to reveal a config effect (a
+ceiling effect). It proves the adapter works and that cc-bench won't overclaim.
+
 ### FAQ
 - **Is this a claim that a `CLAUDE.md` helps?** No. The mock demo proves the
   *method*. To make a real claim, run `--agent claude` on your own tasks.
@@ -47,6 +52,12 @@ Il montre les deux cas qui comptent :
 À retenir : le mock utilise des probabilités *injectées* ; cela prouve que le
 harness sait *détecter* un effet — pas quoi que ce soit sur un vrai agent. Pour du
 réel : `--agent claude`.
+
+**Run réel :** [`real-claude-report.md`](real-claude-report.md) est un vrai run sur
+le CLI `claude` (haiku-4.5, ~0,86 $). Les deux conditions atteignent 100 % →
+**« not proven »** honnête : ces tâches sont trop faciles pour révéler un effet de
+config (effet plafond). Ça prouve que l'adaptateur marche et que cc-bench ne
+surinterprète pas.
 
 ### FAQ
 - **Est-ce une preuve qu'un `CLAUDE.md` aide ?** Non. La démo mock prouve la
