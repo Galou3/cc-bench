@@ -131,12 +131,17 @@ A suite and conditions are just YAML + folders — drop them next to your code:
 ```
 suites/mysuite/
   tasks.yaml                 # id, prompt, template_dir, verify_cmd, ...
-  tasks/<id>/workspace/      # broken code + a failing test (copied per run)
+  tasks/<id>/workspace/      # broken code (copied per run; the agent works here)
   tasks/<id>/reference/      # the fix (held out; never shown to a real agent)
+  tasks/<id>/hidden/         # held-out tests, injected only at GRADING time (optional)
 conditions/
   baseline.yaml
   my-idea.yaml               # inject_files, agent_args, rationale, citation
 ```
+
+For **hard** tasks, put the grading tests under `hidden/` and set `hidden_tests_dir`:
+they are copied in only *after* the agent finishes, so it can't read or overfit
+them — that's what keeps the pass rate off the 100% ceiling (see `suites/hard/`).
 
 Then `ccbench run --suite suites/mysuite --conditions conditions --agent claude`.
 `verify_cmd` is any command (`pytest`, `npm test`, `go test`…), so cc-bench is

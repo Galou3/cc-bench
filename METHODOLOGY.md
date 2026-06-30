@@ -88,9 +88,10 @@ guard behind every "improvement" cc-bench reports.
   inflating pass rates (a known SWE-bench issue, `EVIDENCE.md` [3]). Prefer
   private or freshly authored tasks for absolute claims; for *relative*
   comparisons under identical tasks, contamination largely cancels.
-- **White-box tests.** In the sample suite the agent can see the test file. This
-  is a deliberate, documented choice for a fast demo; held-out tests are a future
-  suite option.
+- **White-box tests.** In the *sample* suite the agent can see the test file
+  (a deliberate choice for a fast, cheap demo). For real measurement use
+  **held-out tests** (`hidden_tests_dir`, as in `suites/hard/`): grading tests are
+  copied in only after the agent finishes, so it cannot read or overfit them.
 - **The mock proves the method, not the agent.** Mock numbers use injected
   ground-truth probabilities and are labelled `SIMULATED` in every report. They
   demonstrate the harness can *detect* an effect of a given size; they say

@@ -23,6 +23,8 @@ default instead of folklore.
       settings (+ `--fix`); covers Claude Code **and** Codex.
 - [x] `ccbench compare` — head-to-head of two runs (claude vs codex, before/after).
 - [x] Experimental `codex` adapter; JavaScript sample suite (language-agnostic).
+- [x] **Held-out tests** (`hidden_tests_dir`) + a **hard** suite (merge_intervals,
+      roman, lru_cache, json_path) that sits below the 100% ceiling.
 - [x] 64 tests incl. a seeded **calibration** proof; **CI live on GitHub Actions**
       (pytest 3.10–3.12 + mock smoke) on every push/PR.
 - [x] Evidence base of 40 cited sources ([`EVIDENCE.md`](EVIDENCE.md)).
