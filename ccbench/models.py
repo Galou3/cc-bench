@@ -48,6 +48,9 @@ class Task:
     prompt: str
     template_dir: str
     verify_cmd: list[str]
+    # Held-out reference solution. NEVER copied into the agent's workspace; the
+    # mock agent reads it to simulate a solved state, real adapters ignore it.
+    reference_dir: str | None = None
     timeout_s: int = 300
     tags: tuple[str, ...] = ()
 
@@ -58,6 +61,7 @@ class Task:
             prompt=str(d["prompt"]),
             template_dir=str(d["template_dir"]),
             verify_cmd=list(d["verify_cmd"]),
+            reference_dir=d.get("reference_dir"),
             timeout_s=int(d.get("timeout_s", 300)),
             tags=tuple(d.get("tags", ())),
         )

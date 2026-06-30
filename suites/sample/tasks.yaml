@@ -1,0 +1,45 @@
+name: sample
+description: >
+  Three tiny, self-contained Python tasks used to smoke-test the harness and to
+  demonstrate conditions. Each task ships broken code plus a failing pytest;
+  success is defined as the test passing (exit code 0). A held-out reference
+  solution lives in each task's reference/ folder and is never copied into the
+  agent's workspace - the deterministic mock agent uses it to simulate a solve,
+  while a real agent must derive the fix from the prompt and the failing test.
+
+tasks:
+  - id: fizzbuzz
+    template_dir: tasks/fizzbuzz/workspace
+    reference_dir: tasks/fizzbuzz/reference
+    verify_cmd: ["python", "-m", "pytest", "-q"]
+    timeout_s: 120
+    tags: [logic, easy]
+    prompt: |
+      fizzbuzz(n) in fizzbuzz.py should return the classic FizzBuzz string:
+      "Fizz" if n is divisible by 3, "Buzz" if by 5, "FizzBuzz" if by both,
+      otherwise str(n). The tests in test_fizzbuzz.py currently fail. Fix
+      fizzbuzz.py so every test passes. Do not modify the tests.
+
+  - id: parse_version
+    template_dir: tasks/parse_version/workspace
+    reference_dir: tasks/parse_version/reference
+    verify_cmd: ["python", "-m", "pytest", "-q"]
+    timeout_s: 120
+    tags: [parsing, easy]
+    prompt: |
+      parse_version(s) in version.py should parse a dotted version string into a
+      3-tuple of ints, padding missing minor/patch with zeros: "1.2.3" -> (1,2,3),
+      "2.5" -> (2,5,0), "1" -> (1,0,0). The tests in test_version.py currently
+      fail. Fix version.py so every test passes. Do not modify the tests.
+
+  - id: dedup_stable
+    template_dir: tasks/dedup_stable/workspace
+    reference_dir: tasks/dedup_stable/reference
+    verify_cmd: ["python", "-m", "pytest", "-q"]
+    timeout_s: 120
+    tags: [logic, easy]
+    prompt: |
+      dedup(items) in dedup.py should remove duplicates while preserving the
+      first-seen order of the remaining elements: [3,1,3,2,1] -> [3,1,2]. The
+      current implementation loses order. The tests in test_dedup.py currently
+      fail. Fix dedup.py so every test passes. Do not modify the tests.
