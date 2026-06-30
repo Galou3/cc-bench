@@ -1,16 +1,4 @@
-"""Typed value objects shared across cc-bench.
-
-Everything here is a plain, immutable record with explicit (de)serialization.
-Two deliberate constraints:
-
-1. **No I/O and no clock.** Models never read files, spawn processes or call
-   ``time``. That keeps them trivially testable and makes a ``RunResult`` a pure
-   function of what the runner observed. Timestamps are stamped *by the caller*
-   (see ``SuiteRun.created_utc``), never invented in here.
-2. **Frozen + slots.** Tasks and conditions are facts about an experiment, not
-   mutable state; freezing them prevents a stage from accidentally rewriting the
-   experiment definition mid-run, and ``slots`` keeps thousands of results cheap.
-"""
+"""Typed, immutable value objects shared across cc-bench (no I/O, no clock)."""
 
 from __future__ import annotations
 
@@ -20,13 +8,7 @@ from typing import Any
 
 
 class Outcome(str, Enum):
-    """Why a single run ended. Kept distinct from a bare bool on purpose:
-
-    a task that *failed its check* (the agent produced wrong code) is a very
-    different signal from one where the *harness* could not even run (ERROR) or
-    the agent ran out of time (TIMEOUT). Collapsing them would silently inflate
-    or deflate a pass rate. ``str`` base => JSON-serializes as its value.
-    """
+    """Why a run ended; str base so it JSON-serialises as its value."""
 
     PASS = "pass"
     FAIL = "fail"
@@ -130,7 +112,7 @@ class Usage:
             self.num_turns + other.num_turns,
         )
 
-    __radd__ = __add__  # lets sum([...]) start from int 0 falling back to +
+    __radd__ = __add__  # so sum(usages, Usage()) works
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -148,12 +130,6 @@ class Usage:
             cost_usd=float(d.get("cost_usd", 0.0)),
             num_turns=int(d.get("num_turns", 0)),
         )
-
-
-# ``Usage.__radd__`` is set to ``__add__``; when ``sum`` seeds with int 0 the
-# first ``0 + Usage`` returns NotImplemented and Python retries as
-# ``Usage.__radd__(0)`` -> still NotImplemented -> TypeError. So callers should
-# seed sums explicitly: ``sum(usages, Usage())``. Documented to avoid surprise.
 
 
 @dataclass(frozen=True, slots=True)

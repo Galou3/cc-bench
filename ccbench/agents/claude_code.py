@@ -1,14 +1,7 @@
-"""Adapter that drives the real Claude Code CLI in headless mode.
+"""Adapter for the real Claude Code CLI (`claude -p --output-format json`).
 
-It invokes ``claude -p "<prompt>" --output-format json`` with the run's workspace
-as the working directory, lets Claude Code edit files there, then parses the JSON
-envelope for usage/cost. Grading is still done independently by the harness.
-
-The JSON shape has shifted across Claude Code versions, so parsing is defensive
-and isolated in ``parse_claude_json`` (a pure function) - that function is what
-the unit tests exercise, so we can validate parsing without spending tokens or
-needing the CLI installed in CI. The live ``run`` path is intentionally not run
-in CI; benchmarking real agents costs money and needs the user's auth.
+Parsing is isolated in parse_claude_json (pure, unit-tested); the live run path is
+CI-excluded since it costs tokens and needs the user's auth.
 """
 
 from __future__ import annotations

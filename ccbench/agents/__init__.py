@@ -1,9 +1,4 @@
-"""Agent adapters and a small factory.
-
-Adapters are kept behind ``make_agent`` so the runner and CLI depend on the
-``Agent`` protocol, not on concrete classes - adding a new agent (e.g. another
-CLI) is one new module plus one line here.
-"""
+"""Agent adapters and the make_agent factory."""
 
 from __future__ import annotations
 

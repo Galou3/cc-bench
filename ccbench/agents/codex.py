@@ -1,10 +1,7 @@
-"""Adapter for OpenAI's Codex CLI - enables Claude-vs-Codex comparisons.
+"""Experimental adapter for the OpenAI Codex CLI (enables claude-vs-codex).
 
-EXPERIMENTAL. The Codex CLI's flags and output format vary by version, so the
-invocation is configurable and the parsing is defensive and isolated in
-``parse_codex_output`` (a pure function with unit tests). Like the claude adapter,
-the live path is not run in CI - it needs the user's Codex auth and spends tokens.
-Grading is always done independently by the harness.
+Parsing isolated in parse_codex_output (pure, tested); flags/format vary by
+version, and the live path is CI-excluded.
 """
 
 from __future__ import annotations

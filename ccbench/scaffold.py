@@ -1,10 +1,4 @@
-"""`ccbench init` - scaffold a runnable starter setup into any repo.
-
-The goal is near-zero friction: after ``ccbench init`` a user has a working suite
-plus two conditions and can immediately run the mock pipeline and see a report.
-Files are never overwritten - init only creates what is missing and reports what
-it skipped, so it is safe to run inside an existing project.
-"""
+"""ccbench init: scaffold a runnable starter suite + conditions into any repo."""
 
 from __future__ import annotations
 

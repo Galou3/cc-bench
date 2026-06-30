@@ -1,9 +1,4 @@
-"""Command-line interface: ``ccbench run`` and ``ccbench report``.
-
-Thin on purpose - it parses args, builds an agent, calls the library, and prints.
-All the logic lives in importable modules so cc-bench is equally usable as a
-library (or from a pytest, or a GitHub Action) and not only as a CLI.
-"""
+"""Command-line interface for cc-bench (run / report / compare / doctor / init)."""
 
 from __future__ import annotations
 

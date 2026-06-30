@@ -1,25 +1,6 @@
-"""Turn raw runs into honest, defensible statistics.
+"""Honest statistics: per-condition rates, between-condition tests, pass@k.
 
-This module is the whole point of cc-bench: it decides whether a condition
-*provably* changed the pass rate, or whether an apparent difference is within
-noise. Design principles:
-
-- **Right tool per quantity.** A single condition's pass rate gets a Wilson score
-  interval (well-calibrated for proportions at small n, unlike the normal
-  approximation or a naive bootstrap). The *difference* between two conditions
-  gets a percentile bootstrap CI plus a two-proportion z-test, because a
-  closed-form CI for a difference of proportions is the part people most often
-  get wrong.
-- **No hidden libraries.** Everything is stdlib (``math.erf`` for the normal CDF,
-  Acklam's rational approximation for its inverse), so the numbers are auditable
-  and the install stays trivial.
-- **Honesty by construction.** A result is only called "significant" when the
-  bootstrap difference CI excludes zero AND the z-test clears alpha. Small n just
-  produces a wide interval and a "not proven" verdict - which is the correct
-  scientific answer, not a failure of the tool.
-- **Outcomes are not all equal.** ERROR (harness/config fault) is excluded from
-  the denominator; TIMEOUT counts as not-solved (a too-slow agent did not solve
-  the task). Both counts are reported so nothing is swept under the rug.
+Stdlib only (math.erf for the normal CDF, Acklam's approximation for its inverse).
 """
 
 from __future__ import annotations

@@ -1,15 +1,4 @@
-"""Orchestrate a benchmark sweep and persist the results.
-
-For every ``(condition, task, rep)`` the runner: makes a fresh workspace, injects
-the condition's files, lets the agent act, grades independently, and records a
-``RunResult``. The loop is intentionally sequential in v0.1 - the mock is instant,
-and parallelising real agent calls invites rate limits and interleaved permission
-prompts; concurrency can come later behind a flag.
-
-Unlike the models, the runner is allowed a clock: it stamps wall-time per run and
-an ISO-8601 ``created_utc`` on the SuiteRun, so a saved run is self-describing and
-reproducible from (suite, conditions, agent, seed).
-"""
+"""Orchestrate a benchmark sweep (condition x task x rep) and persist results."""
 
 from __future__ import annotations
 

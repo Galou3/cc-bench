@@ -1,15 +1,4 @@
-"""The contract every agent adapter implements.
-
-An agent's only job is to *act on a workspace in place* (edit files to try to make
-the task's test pass) and report what it cost. Grading is not the agent's job -
-the harness grades independently with ``verify.run_check`` - which keeps a clean
-separation between "the agent did something" and "the something was correct".
-
-``RunContext`` bundles everything an adapter might need. Real adapters use
-``task``/``workspace``; the deterministic mock also uses ``rep``/``seed`` so its
-outcome is a pure function of the experiment coordinates (reproducible, and order
--independent under parallelism).
-"""
+"""The Agent protocol: act on a workspace in place and report usage; grading is separate."""
 
 from __future__ import annotations
 

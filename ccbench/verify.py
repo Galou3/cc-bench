@@ -1,16 +1,4 @@
-"""Grade one run by executing the task's check command in its workspace.
-
-The grader is deliberately the dumbest possible thing that is still honest: it
-runs ``task.verify_cmd`` and maps the process outcome to an ``Outcome``. There is
-no LLM judge and no fuzzy matching, so the pass/fail signal is reproducible and a
-third party can re-run the exact command by hand.
-
-The four-way mapping is what keeps a pass rate trustworthy:
-- exit 0            -> PASS    (the task's own tests accept the work)
-- exit non-zero     -> FAIL    (tests ran and rejected the work)
-- TimeoutExpired    -> TIMEOUT (no verdict; counted apart from FAIL)
-- command not found -> ERROR   (harness misconfig; never a silent FAIL)
-"""
+"""Grade one run by executing the task's verify_cmd in its workspace."""
 
 from __future__ import annotations
 

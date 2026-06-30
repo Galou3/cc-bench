@@ -1,15 +1,4 @@
-"""`ccbench doctor` - audit a Claude Code setup against the evidence, in seconds.
-
-This is the zero-cost, zero-API on-ramp: most people will never write a benchmark
-suite, but everyone has a `.claude/` they could improve. doctor reads the setup
-(`CLAUDE.md`, `.claude/settings.json`, subagents, memory) and flags patterns the
-literature says are likely harmful, each with a concrete fix and a citation into
-EVIDENCE.md.
-
-Honesty boundary: doctor checks *known* best practices statically. It cannot tell
-you that a change helped *your* tasks - only `ccbench run` can. So findings are
-recommendations grounded in evidence, never a promise of improvement.
-"""
+"""ccbench doctor: static, evidence-cited audit of a Claude Code / Codex setup."""
 
 from __future__ import annotations
 

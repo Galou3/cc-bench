@@ -1,14 +1,4 @@
-"""Build the isolated filesystem an agent works in for a single run.
-
-Kept separate from grading (verify.py) and orchestration (runner.py) because the
-filesystem layer is the part most likely to differ between a Windows dev box and
-Linux CI, so it is small and independently testable.
-
-Isolation matters for validity: if run N could see files left by run N-1, a pass
-rate would measure contamination, not the agent. Every run gets a fresh copy of
-the task template; the held-out reference is outside the template and never lands
-here.
-"""
+"""Build the isolated workspace an agent works in for a single run."""
 
 from __future__ import annotations
 

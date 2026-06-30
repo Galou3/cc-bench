@@ -1,18 +1,4 @@
-"""Render a SuiteRun into a human-facing Markdown report (and a CSV).
-
-The report is the artifact people actually read, so it carries the project's
-honesty rules into the output:
-
-- If the run used the ``mock`` agent, a loud banner states the numbers are a
-  capability demo of the harness, not a claim about any real agent. This is the
-  single most important line in the whole tool - it is what stops a reader from
-  mistaking a simulated effect for a measured one.
-- Every comparison shows the confidence interval and the n, and labels a result
-  "not proven" unless it is genuinely significant, so a noisy difference can't be
-  read as a win.
-- Each condition's rationale/citation is printed, keeping the evidence trail
-  visible from EVIDENCE.md all the way to the result.
-"""
+"""Render a SuiteRun into a Markdown report (and CSV)."""
 
 from __future__ import annotations
 

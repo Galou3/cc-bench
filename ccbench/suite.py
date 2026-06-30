@@ -1,18 +1,4 @@
-"""Load benchmark suites and conditions from declarative YAML.
-
-A *suite* is a directory with a ``tasks.yaml`` manifest plus the task folders it
-points at. A *condition* is a small YAML record (or a directory of them). Loading
-does three jobs beyond parsing:
-
-1. **Resolve paths early.** ``template_dir``/``reference_dir`` are stored relative
-   to the suite in YAML (so a suite is relocatable) but resolved to absolute paths
-   here, so the runner never needs to know where the suite lives.
-2. **Fail loud on definition errors.** A missing template dir or duplicate id is a
-   bug in the *experiment*, not a run-time fluke; we raise before any agent runs
-   rather than silently producing a misleading pass rate.
-3. **Keep agent input and grader honest.** We only resolve the reference dir; we
-   never copy it. The runner is responsible for excluding it from the workspace.
-"""
+"""Load benchmark suites and conditions from declarative YAML."""
 
 from __future__ import annotations
 

@@ -1,22 +1,8 @@
-"""A deterministic mock agent - the harness's test instrument.
+"""Deterministic, zero-cost mock agent.
 
-The mock has no intelligence. Given a condition's *ground-truth* success
-probability (``condition.metadata['mock_success_prob']``), it succeeds or fails
-according to a hash of the experiment coordinates ``(seed, task, condition, rep)``.
-
-Two reasons this matters more than it looks:
-
-1. **Zero cost, fully reproducible.** CI can run the whole pipeline with no API
-   calls, and the same seed always yields the same results.
-2. **It makes "improvement" provable.** Because we *inject* a known effect (say
-   baseline p=0.45 vs. a condition p=0.75), we can check that the analysis
-   recovers a significant difference when one truly exists and, crucially, does
-   NOT manufacture one when both conditions share the same p. That calibration is
-   what licenses us to trust the same analysis on real ``claude`` runs.
-
-On a simulated success the mock copies the held-out reference solution into the
-workspace so the real grader (``verify.run_check``) passes for real - we never
-fake the PASS, we make the code actually correct.
+Succeeds per a condition's ground-truth probability, hashing (seed, task,
+condition, rep). On success it copies the held-out reference into the workspace so
+the real grader passes for real (we never fake a PASS).
 """
 
 from __future__ import annotations
