@@ -16,7 +16,7 @@ from . import __version__
 from .agents import available_agents, make_agent
 from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
 from .doctor import apply_fixes, audit, render as render_doctor, summary as doctor_summary
-from .report import render_csv, render_markdown
+from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
 from .suite import SuiteError, load_conditions
@@ -114,6 +114,19 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_compare(args: argparse.Namespace) -> int:
+    run_a = load_run(args.run_a)
+    run_b = load_run(args.run_b)
+    md = render_run_comparison(run_a, run_b, args.label_a, args.label_b,
+                               confidence=args.confidence, correction=args.correction)
+    if args.out:
+        Path(args.out).write_text(md, encoding="utf-8")
+        print(f"wrote {args.out}")
+    else:
+        print(md)
+    return 0
+
+
 def _cmd_agents(_args: argparse.Namespace) -> int:
     print("available agents: " + ", ".join(available_agents()))
     return 0
@@ -183,6 +196,16 @@ def build_parser() -> argparse.ArgumentParser:
     rep.add_argument("--out", default=None, help="write Markdown here instead of stdout")
     rep.add_argument("--csv", default=None, help="also write a per-condition CSV here")
     rep.set_defaults(func=_cmd_report)
+
+    cmp = sub.add_parser("compare", help="compare two saved runs (e.g. claude vs codex)")
+    cmp.add_argument("run_a", help="first run dir (the reference)")
+    cmp.add_argument("run_b", help="second run dir")
+    cmp.add_argument("--label-a", default="A")
+    cmp.add_argument("--label-b", default="B")
+    cmp.add_argument("--confidence", type=float, default=0.95)
+    cmp.add_argument("--correction", default="holm", choices=["none", "holm", "bh", "fdr"])
+    cmp.add_argument("--out", default=None, help="write Markdown here instead of stdout")
+    cmp.set_defaults(func=_cmd_compare)
 
     ag = sub.add_parser("agents", help="list available agents")
     ag.set_defaults(func=_cmd_agents)

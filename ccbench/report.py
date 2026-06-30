@@ -20,7 +20,10 @@ import csv
 import io
 from typing import Sequence
 
-from .analysis import compare_all, distinct_seeds, pass_at_k_mean, robustness, summarize_condition
+from .analysis import (
+    adjust_pvalues, compare, compare_all, distinct_seeds, pass_at_k_mean,
+    robustness, summarize_condition,
+)
 from .models import Condition, RunResult, SuiteRun
 
 _MOCK_BANNER = (
@@ -215,4 +218,66 @@ def render_csv(suite_run: SuiteRun, confidence: float = 0.95) -> str:
     return buf.getvalue()
 
 
-__all__ = ["render_markdown", "render_csv"]
+def render_run_comparison(
+    run_a: SuiteRun,
+    run_b: SuiteRun,
+    label_a: str = "A",
+    label_b: str = "B",
+    confidence: float = 0.95,
+    bootstrap_iters: int = 5000,
+    seed: int = 0,
+    correction: str = "holm",
+) -> str:
+    """Compare two saved runs (e.g. claude vs codex, or before vs after a change).
+
+    Reports overall and per-shared-condition differences with the same honest
+    two-gate verdict, p-values corrected across the rows. Loudly flags the cases
+    that would make the comparison misleading (different suites; a mock run).
+    """
+    pct = int(round(confidence * 100))
+    alpha = 1.0 - confidence
+    rows: list[tuple[str, list[RunResult], list[RunResult]]] = [
+        ("overall", list(run_a.results), list(run_b.results))
+    ]
+    shared = [c for c in run_a.conditions if c in set(run_b.conditions)]
+    for c in shared:
+        rows.append((c, run_a.for_condition(c), run_b.for_condition(c)))
+
+    comps = [compare(a, b, label_a, label_b, confidence=confidence,
+                     bootstrap_iters=bootstrap_iters, seed=seed) for _, a, b in rows]
+    adj = adjust_pvalues([c.p_value for c in comps], correction)
+
+    lines = [f"# cc-bench - {label_a} vs {label_b}", ""]
+    lines.append(f"- {label_a}: suite=`{run_a.suite}` agent=`{run_a.agent}` n={len(run_a.results)}")
+    lines.append(f"- {label_b}: suite=`{run_b.suite}` agent=`{run_b.agent}` n={len(run_b.results)}")
+    lines.append("")
+    if run_a.suite != run_b.suite:
+        lines.append("> **Warning:** the two runs use different suites - this is not an "
+                     "apples-to-apples comparison.\n")
+    if run_a.agent == "mock" or run_b.agent == "mock":
+        lines.append("> **Note:** a `mock` run uses injected probabilities; it demonstrates the "
+                     "harness, it is not a real measurement.\n")
+
+    lines.append(f"| Scope | {label_a} | {label_b} | delta ({label_b}-{label_a}) | "
+                 f"{pct}% CI | p ({correction}) | verdict |")
+    lines.append("|---|---:|---:|---:|---:|---:|:--|")
+    for (scope, _, _), c, padj in zip(rows, comps, adj):
+        ci_excludes_zero = c.diff_ci_low > 0 or c.diff_ci_high < 0
+        sig = ci_excludes_zero and padj < alpha
+        if sig and c.diff > 0:
+            verdict = f"[+] {label_b} better"
+        elif sig and c.diff < 0:
+            verdict = f"[-] {label_a} better"
+        else:
+            verdict = "[~] not proven"
+        lines.append(
+            f"| {scope} | {c.rate_baseline:.1%} | {c.rate_variant:.1%} | {c.diff:+.1%} | "
+            f"[{c.diff_ci_low:+.1%}, {c.diff_ci_high:+.1%}] | {padj:.4f} | {verdict} |"
+        )
+    lines.append("")
+    lines.append(f"_delta is {label_b} minus {label_a}; a winner is declared only when the CI "
+                 f"excludes 0 **and** the {correction}-adjusted p < {alpha:.2f}._")
+    return "\n".join(lines)
+
+
+__all__ = ["render_markdown", "render_csv", "render_run_comparison"]
