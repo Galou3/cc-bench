@@ -60,6 +60,23 @@ reports **not proven** rather than overclaim. Honesty is the default.
 > **harness can detect an effect of that size at that n** - not anything about a
 > real agent. Swap in `--agent claude` to measure for real.
 
+## How cc-bench compares
+
+- **Setup linters** (agnix, claudelint, AgentLint) check your `CLAUDE.md` / `AGENTS.md`
+  statically and ship far more rules than `ccbench doctor`. They stop there: by their
+  own admission they measure *harness health, not agent success*. `doctor` is the
+  on-ramp here, not the product.
+- **The product is the proof.** cc-bench is the only free, local tool that A/B-tests a
+  setup change on *your own tasks* with real inferential statistics (Wilson + bootstrap
+  CIs, multiplicity correction, an honest "not proven"), grades by *running the real
+  tests* (no LLM-judge noise), and does it for **Claude and Codex**. The closest
+  measurement tools either skip significance (jchilcher's claude-benchmark, Anthropic's
+  skill A/B) or are paid SaaS (Braintrust).
+- **Optimizers are friends, not rivals.** Improve a config with DSPy / GEPA / CodexOpt,
+  then *certify the gain* with cc-bench. Optimize, then prove.
+
+Full map in [PRIOR_ART.md](PRIOR_ART.md).
+
 ## How it works
 
 ```mermaid

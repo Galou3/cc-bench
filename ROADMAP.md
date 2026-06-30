@@ -29,6 +29,26 @@ default instead of folklore.
       (pytest 3.10-3.12 + mock smoke) on every push/PR.
 - [x] Evidence base of 40 cited sources ([`EVIDENCE.md`](EVIDENCE.md)).
 
+## Priorities, by impact (from the competitive map)
+
+See [PRIOR_ART.md](PRIOR_ART.md). The biggest levers, ordered:
+
+1. **Distribution.** Publish to PyPI (`pip install ccbench`), ship a live GitHub
+   Action that runs the zero-cost mock A/B as a PR gate, package an MCP server +
+   a Claude Code skill so Claude can call `doctor`/`run` itself, and get listed in
+   hesreallyhim/awesome-claude-code. This is the #1 adoption gap.
+2. **A flagship real result.** One reproducible, statistically significant
+   real-agent finding (with scripts + seeds) to lead the README with. Today the
+   headline numbers are from the mock, which only proves the harness.
+3. **The audit<->measure bridge nobody else has.** Make each `doctor` finding emit
+   the matching condition YAML, then `ccbench prove <finding>` runs the A/B and
+   returns a verdict. Turns every static recommendation into a falsifiable
+   experiment - the one feature no competitor can copy without both halves.
+4. **Doctor toward parity:** more high-value checks (dangerous-bash, stale model
+   IDs, @import cycles, frontmatter/schema validation), each still EVIDENCE-cited.
+5. **Coverage:** real Go/Java/C++ suites, harden the Codex adapter, optional Docker
+   sandbox for untrusted code.
+
 ## SMART objectives (12-month horizon)
 
 - **Specific** - ship a CLI + library (and a thin VS Code task / GitHub Action)
