@@ -8,12 +8,14 @@ library (or from a pytest, or a GitHub Action) and not only as a CLI.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
 from . import __version__
 from .agents import available_agents, make_agent
 from .analysis import compare_all, summarize_condition
+from .doctor import apply_fixes, audit, render as render_doctor, summary as doctor_summary
 from .report import render_csv, render_markdown
 from .runner import load_run, run_suite, save_run
 from .scaffold import next_steps, scaffold
@@ -114,6 +116,21 @@ def _cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    findings = audit(args.dir)
+    if args.fix:
+        actions = apply_fixes(args.dir, findings)
+        for a in actions:
+            print(f"  fixed: {a}")
+        if actions:
+            findings = audit(args.dir)  # re-audit so the report reflects the fixes
+    if args.json:
+        print(json.dumps([f.to_dict() for f in findings], indent=2))
+    else:
+        print(render_doctor(findings, args.dir))
+    return 1 if doctor_summary(findings)["fail"] else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ccbench", description="Measure whether your coding-agent setup actually helps.")
     p.add_argument("--version", action="version", version=f"cc-bench {__version__}")
@@ -155,6 +172,12 @@ def build_parser() -> argparse.ArgumentParser:
     ini = sub.add_parser("init", help="scaffold a runnable starter suite + conditions")
     ini.add_argument("--dir", default=".", help="directory to scaffold into (default: cwd)")
     ini.set_defaults(func=_cmd_init)
+
+    doc = sub.add_parser("doctor", help="audit a Claude Code setup against the evidence")
+    doc.add_argument("--dir", default=".", help="project root to audit (default: cwd)")
+    doc.add_argument("--fix", action="store_true", help="apply safe auto-fixes (e.g. add a starter CLAUDE.md)")
+    doc.add_argument("--json", action="store_true", help="emit findings as JSON")
+    doc.set_defaults(func=_cmd_doctor)
 
     return p
 

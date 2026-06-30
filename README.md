@@ -52,6 +52,22 @@ reports **not proven** rather than overclaim. Honesty is the default.
 > **harness can detect an effect of that size at that n** — not anything about a
 > real agent. Swap in `--agent claude` to measure for real.
 
+## Improve your Claude Code setup in one command
+
+Most people will never write a benchmark — but everyone has a `.claude/` they could
+improve. `ccbench doctor` audits it against the evidence in seconds, free, offline:
+
+```bash
+ccbench doctor          # audit CLAUDE.md / settings.json / subagents / memory
+ccbench doctor --fix    # apply safe fixes (e.g. drop a concise starter CLAUDE.md)
+```
+
+It flags patterns the literature says are likely harmful — a 600-line `CLAUDE.md`,
+a broken `settings.json`, a `MEMORY.md` past the load limit — each with a concrete
+fix **and a citation** into [`EVIDENCE.md`](EVIDENCE.md). Honest by design: doctor
+checks *known* best practices; to prove a change helped *your* tasks, run the
+benchmark below.
+
 ## How it works
 
 ```mermaid
