@@ -20,7 +20,7 @@ import csv
 import io
 from typing import Sequence
 
-from .analysis import compare_all, pass_at_k_mean, summarize_condition
+from .analysis import compare_all, distinct_seeds, pass_at_k_mean, robustness, summarize_condition
 from .models import Condition, RunResult, SuiteRun
 
 _MOCK_BANNER = (
@@ -150,6 +150,27 @@ def render_markdown(
         lines.append(
             "_pass@k = unbiased estimator (Chen et al. 2021): chance that at least one "
             "of k samples passes, averaged over tasks. '-' = fewer than k reps for some task._"
+        )
+        lines.append("")
+
+    # Robustness across seeds (only when the run used more than one seed)
+    if len(distinct_seeds(suite_run.results)) >= 2:
+        lines.append("## Robustness across seeds")
+        lines.append("")
+        lines.append("| Condition | seeds | mean pass rate | SD | min..max |")
+        lines.append("|---|---:|---:|---:|---:|")
+        for name in suite_run.conditions:
+            rb = robustness(suite_run.for_condition(name), name)
+            if rb is None:
+                continue
+            lines.append(
+                f"| `{name}` | {rb.n_seeds} | {rb.mean:.1%} | {rb.sd:.1%} | "
+                f"{rb.rate_min:.1%}..{rb.rate_max:.1%} |"
+            )
+        lines.append("")
+        lines.append(
+            "_Lower SD = more reproducible. A high SD means a single run's headline rate is "
+            "partly luck - add reps/seeds before trusting it._"
         )
         lines.append("")
 

@@ -14,10 +14,10 @@ from pathlib import Path
 
 from . import __version__
 from .agents import available_agents, make_agent
-from .analysis import compare_all, summarize_condition
+from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
 from .doctor import apply_fixes, audit, render as render_doctor, summary as doctor_summary
 from .report import render_csv, render_markdown
-from .runner import load_run, run_suite, save_run
+from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
 from .suite import SuiteError, load_conditions
 
@@ -54,6 +54,14 @@ def _print_summary(run, confidence: float, correction: str = "holm") -> None:
         print(f"\nvs baseline `{base}` (p adjusted: {correction}):")
         for c in comps:
             print(f"  {c.variant:20} {c.diff:+6.1%}  p={c.effective_p:.4f}  -> {c.verdict}")
+    seeds = distinct_seeds(run.results)
+    if len(seeds) >= 2:
+        print(f"\nrobustness across {len(seeds)} seeds (mean +/- SD):")
+        for name in run.conditions:
+            rb = robustness(run.for_condition(name), name)
+            if rb:
+                print(f"  {name:20} {rb.mean:6.1%} +/- {rb.sd:.1%}  "
+                      f"(min..max {rb.rate_min:.0%}..{rb.rate_max:.0%})")
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
@@ -65,11 +73,19 @@ def _cmd_run(args: argparse.Namespace) -> int:
     agent = _build_agent(args)
     print(f"Running suite '{args.suite}' x {len(conditions)} conditions x {args.reps} reps "
           f"with agent '{agent.name}'...")
-    run = run_suite(
-        args.suite, conditions, agent,
-        reps=args.reps, seed=args.seed,
-        keep_workspaces=args.keep_workspaces, progress=_progress,
-    )
+    if args.seeds:
+        seeds = [int(s) for s in args.seeds.split(",") if s.strip() != ""]
+        run = run_suite_seeds(
+            args.suite, conditions, agent,
+            reps=args.reps, seeds=seeds,
+            keep_workspaces=args.keep_workspaces, progress=_progress,
+        )
+    else:
+        run = run_suite(
+            args.suite, conditions, agent,
+            reps=args.reps, seed=args.seed,
+            keep_workspaces=args.keep_workspaces, progress=_progress,
+        )
     out_dir = save_run(run, args.out)
     _print_summary(run, args.confidence, args.correction)
     print(f"\nSaved to {out_dir}  (mirror: {Path(args.out) / 'latest'})")
@@ -142,6 +158,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--agent", default="mock", choices=available_agents())
     r.add_argument("--reps", type=int, default=5)
     r.add_argument("--seed", type=int, default=0)
+    r.add_argument("--seeds", default=None,
+                   help="comma-separated seeds for a multi-seed robustness run (overrides --seed)")
     r.add_argument("--out", default="runs", help="runs root directory")
     r.add_argument("--confidence", type=float, default=0.95)
     r.add_argument("--correction", default="holm", choices=["none", "holm", "bh", "fdr"],

@@ -2,8 +2,8 @@ import math
 
 from ccbench.analysis import (
     _z_for_confidence, benjamini_hochberg, compare, count_outcomes,
-    holm_bonferroni, pass_at_k, pass_at_k_mean, summarize_condition,
-    two_proportion_p, wilson_interval,
+    distinct_seeds, holm_bonferroni, pass_at_k, pass_at_k_mean, robustness,
+    summarize_condition, two_proportion_p, wilson_interval,
 )
 from ccbench.models import Outcome, RunResult, Usage
 
@@ -85,3 +85,22 @@ def test_pass_at_k_mean_over_tasks():
         res.append(RunResult("B", "c", i, Outcome.PASS if i < 4 else Outcome.FAIL, Usage(), 0.0))
     assert abs(pass_at_k_mean(res, 1) - 0.6) < 1e-9          # (0.4 + 0.8) / 2
     assert pass_at_k_mean(res, 6) is None                     # k > reps for a task
+
+
+def test_robustness_across_seeds():
+    res = []
+    for seed, k in ((0, 2), (1, 3), (2, 4)):  # rates 0.50, 0.75, 1.00
+        for i in range(4):
+            res.append(RunResult("t", "c", i, Outcome.PASS if i < k else Outcome.FAIL,
+                                 Usage(), 0.0, seed=seed))
+    rb = robustness(res, "c")
+    assert rb.n_seeds == 3
+    assert abs(rb.mean - 0.75) < 1e-9
+    assert abs(rb.rate_min - 0.5) < 1e-9 and abs(rb.rate_max - 1.0) < 1e-9
+    assert rb.sd > 0
+
+
+def test_robustness_single_seed_is_none():
+    res = [RunResult("t", "c", i, Outcome.PASS, Usage(), 0.0, seed=0) for i in range(4)]
+    assert robustness(res, "c") is None
+    assert distinct_seeds(res) == [0]

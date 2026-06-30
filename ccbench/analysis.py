@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import math
 import random
+import statistics
 from dataclasses import dataclass, replace
 from typing import Iterable, Sequence
 
@@ -398,9 +399,65 @@ def pass_at_k_mean(results: Sequence[RunResult], k: int) -> float | None:
     return sum(vals) / len(vals)
 
 
+# --------------------------------------------------------------------------- #
+# Robustness across seeds
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True, slots=True)
+class Robustness:
+    """How stable a condition's pass rate is across independent seeds.
+
+    A low ``sd`` means the result is reproducible; a high one means the headline
+    rate is partly luck and you should not over-read a single run.
+    """
+
+    condition: str
+    rates: tuple[float, ...]  # one pass rate per seed
+    mean: float
+    sd: float                 # sample standard deviation across seeds
+    rate_min: float
+    rate_max: float
+
+    @property
+    def n_seeds(self) -> int:
+        return len(self.rates)
+
+    def to_dict(self) -> dict:
+        return {"condition": self.condition, "n_seeds": self.n_seeds,
+                "rates": list(self.rates), "mean": self.mean, "sd": self.sd,
+                "rate_min": self.rate_min, "rate_max": self.rate_max}
+
+
+def distinct_seeds(results: Iterable[RunResult]) -> list:
+    """Seeds present, in first-seen order."""
+    seen: list = []
+    for r in results:
+        if r.seed not in seen:
+            seen.append(r.seed)
+    return seen
+
+
+def robustness(results: Sequence[RunResult], condition: str) -> Robustness | None:
+    """Per-seed pass rate spread for one condition's results. None if < 2 seeds."""
+    by_seed: dict = {}
+    for r in results:
+        by_seed.setdefault(r.seed, []).append(r)
+    if len(by_seed) < 2:
+        return None
+    rates = []
+    for rs in by_seed.values():
+        cnt = count_outcomes(rs)
+        rates.append(cnt.passes / cnt.decided if cnt.decided else 0.0)
+    return Robustness(
+        condition=condition, rates=tuple(rates),
+        mean=statistics.mean(rates), sd=statistics.stdev(rates),
+        rate_min=min(rates), rate_max=max(rates),
+    )
+
+
 __all__ = [
     "Counts", "count_outcomes", "wilson_interval", "RateSummary",
     "summarize_condition", "two_proportion_p", "bootstrap_diff_ci",
     "Comparison", "compare", "holm_bonferroni", "benjamini_hochberg",
     "adjust_pvalues", "compare_all", "pass_at_k", "pass_at_k_mean",
+    "Robustness", "distinct_seeds", "robustness",
 ]

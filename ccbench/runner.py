@@ -95,6 +95,39 @@ def run_suite(
     )
 
 
+def run_suite_seeds(
+    suite_dir: str | Path,
+    conditions: Sequence[Condition],
+    agent: Agent,
+    *,
+    reps: int = 5,
+    seeds: Sequence[int] = (0,),
+    keep_workspaces: str | Path | None = None,
+    progress: ProgressFn | None = None,
+) -> SuiteRun:
+    """Run the suite once per seed and merge the results into one SuiteRun.
+
+    Each RunResult keeps its own seed, so downstream robustness analysis can
+    measure how much the pass rate moves from seed to seed. SuiteRun.seed is left
+    None to signal a multi-seed run.
+    """
+    all_results: list[RunResult] = []
+    suite_name = ""
+    for s in seeds:
+        run = run_suite(suite_dir, conditions, agent, reps=reps, seed=s,
+                        keep_workspaces=keep_workspaces, progress=progress)
+        suite_name = run.suite
+        all_results.extend(run.results)
+    return SuiteRun(
+        suite=suite_name,
+        agent=agent.name,
+        conditions=tuple(c.name for c in conditions),
+        results=tuple(all_results),
+        seed=None,
+        created_utc=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Persistence
 # --------------------------------------------------------------------------- #
@@ -148,4 +181,4 @@ def load_run(run_dir: str | Path) -> SuiteRun:
     )
 
 
-__all__ = ["run_suite", "save_run", "load_run", "ProgressFn"]
+__all__ = ["run_suite", "run_suite_seeds", "save_run", "load_run", "ProgressFn"]
