@@ -11,11 +11,13 @@ from typing import Any
 
 from .base import Agent, AgentRunInfo, RunContext
 from .claude_code import ClaudeCodeAgent, parse_claude_json
+from .codex import CodexAgent, parse_codex_output
 from .mock import MockAgent
 
 _REGISTRY = {
     "mock": MockAgent,
     "claude": ClaudeCodeAgent,
+    "codex": CodexAgent,
 }
 
 
@@ -43,7 +45,9 @@ __all__ = [
     "RunContext",
     "MockAgent",
     "ClaudeCodeAgent",
+    "CodexAgent",
     "parse_claude_json",
+    "parse_codex_output",
     "make_agent",
     "available_agents",
 ]

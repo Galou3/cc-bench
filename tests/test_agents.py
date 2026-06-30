@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from ccbench.agents import available_agents, make_agent, parse_claude_json
+from ccbench.agents import available_agents, make_agent, parse_claude_json, parse_codex_output
 from ccbench.agents.base import RunContext
 from ccbench.models import Condition, Task
 
@@ -31,6 +31,25 @@ def test_unknown_agent_raises():
     with pytest.raises(ValueError):
         make_agent("nope")
     assert "mock" in available_agents() and "claude" in available_agents()
+
+
+def test_codex_registered_and_constructs():
+    assert "codex" in available_agents()
+    make_agent("codex")  # should not raise
+
+
+def test_parse_codex_output_jsonl():
+    text = "\n".join([
+        json.dumps({"type": "start"}),
+        json.dumps({"usage": {"input_tokens": 12, "output_tokens": 3}, "result": "done"}),
+    ])
+    usage, note = parse_codex_output(text)
+    assert usage.input_tokens == 12 and usage.output_tokens == 3 and note == "done"
+
+
+def test_parse_codex_output_plain_text():
+    usage, note = parse_codex_output("some log line\nlast line")
+    assert usage.input_tokens == 0 and note == "last line"
 
 
 def test_parse_claude_json_object():

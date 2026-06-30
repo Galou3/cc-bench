@@ -1,0 +1,21 @@
+# Drop-in CI for cc-bench.
+# Copy this file to .github/workflows/cc-bench.yml in YOUR repo, after running
+# `ccbench init` at the repo root. It runs the zero-cost mock pipeline on every
+# push/PR so the harness stays green with no secrets and no API spend.
+name: cc-bench
+
+on: [push, pull_request]
+
+jobs:
+  ccbench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install cc-bench
+        # Not on PyPI yet - install from GitHub:
+        run: pip install "git+https://github.com/Galou3/cc-bench"
+      - name: Run mock pipeline (zero cost)
+        run: ccbench run --suite ccbench_suite --conditions conditions --agent mock --reps 20

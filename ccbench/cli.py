@@ -16,6 +16,7 @@ from .agents import available_agents, make_agent
 from .analysis import compare_all, summarize_condition
 from .report import render_csv, render_markdown
 from .runner import load_run, run_suite, save_run
+from .scaffold import next_steps, scaffold
 from .suite import SuiteError, load_conditions
 
 
@@ -100,6 +101,19 @@ def _cmd_agents(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_init(args: argparse.Namespace) -> int:
+    created, skipped = scaffold(args.dir)
+    for c in created:
+        print(f"  created {c}")
+    for s in skipped:
+        print(f"  skipped {s} (exists)")
+    if not created:
+        print("nothing to create - starter files already present.")
+    else:
+        print("\n" + next_steps())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="ccbench", description="Measure whether your coding-agent setup actually helps.")
     p.add_argument("--version", action="version", version=f"cc-bench {__version__}")
@@ -137,6 +151,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     ag = sub.add_parser("agents", help="list available agents")
     ag.set_defaults(func=_cmd_agents)
+
+    ini = sub.add_parser("init", help="scaffold a runnable starter suite + conditions")
+    ini.add_argument("--dir", default=".", help="directory to scaffold into (default: cwd)")
+    ini.set_defaults(func=_cmd_init)
 
     return p
 
