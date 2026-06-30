@@ -1,0 +1,17 @@
+name: with-claude-md
+description: A short, focused CLAUDE.md is present in the agent's workspace.
+inject_files:
+  CLAUDE.md: |
+    # Working agreement
+    - The task is to make the failing test pass. Do not edit the tests.
+    - Make the smallest change that is correct; do not refactor unrelated code.
+    - Read the failing test first to recover the exact expected behaviour.
+rationale: >
+  Anthropic's guidance is to keep CLAUDE.md short (<200 lines) because long files
+  consume context and reduce instruction adherence; a concise, task-relevant
+  CLAUDE.md is hypothesised to raise the pass rate.
+citation:
+  - "EVIDENCE.md > Claude Code usage: CLAUDE.md under 200 lines"
+  - "Liu et al. 2023, Lost in the Middle"
+metadata:
+  mock_success_prob: 0.70

@@ -1,0 +1,7 @@
+name: baseline
+description: Default invocation, no CLAUDE.md injected. The control everything else is measured against.
+rationale: Control condition - all comparisons are relative to this.
+metadata:
+  # Ground-truth success probability used ONLY by the deterministic mock agent
+  # to demonstrate the harness. Ignored by the real `claude` adapter.
+  mock_success_prob: 0.40

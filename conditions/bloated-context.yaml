@@ -1,0 +1,31 @@
+name: bloated-context
+description: A long, mostly-irrelevant CLAUDE.md that pads the context window.
+inject_files:
+  CLAUDE.md: |
+    # Engineering handbook (excerpt)
+    Our company values collaboration, ownership, and craftsmanship. Please read
+    the following before starting any work.
+    - Prefer tabs in legacy modules and spaces in new ones, except on Fridays.
+    - All meetings should have an agenda circulated 24 hours in advance.
+    - The cafeteria serves lunch from 12:00 to 14:00; the vegan option rotates.
+    - When naming branches, use the format team/initials/ticket, lowercase only.
+    - Our brand colour is #2B6CB0; never use pure black for text.
+    - Remember to log your hours in the timesheet portal before end of week.
+    - The quarterly all-hands is on the first Monday; attendance is encouraged.
+    - Coffee machine #3 on floor 2 is out of order; use the one near reception.
+    - Parking spots are assigned by seniority; visitors park in lot C.
+    - Document decisions in the wiki using the standard ADR template.
+    - Slack status should reflect your availability; use :focus: when heads-down.
+    - Friday demos are optional but appreciated; sign up in the shared sheet.
+    - The dress code is smart casual; hoodies are fine, flip-flops are not.
+    - Expense reports over 50 EUR require a receipt and manager approval.
+rationale: >
+  Long-context research (lost-in-the-middle, context rot) predicts that padding
+  the prompt with topically-plausible but task-irrelevant content degrades
+  performance, and that the harm grows with input length. This condition tests
+  whether bloating CLAUDE.md hurts the pass rate.
+citation:
+  - "EVIDENCE.md > Long-context behavior: context rot"
+  - "Levy et al. 2024; Chroma Context Rot 2025"
+metadata:
+  mock_success_prob: 0.20
