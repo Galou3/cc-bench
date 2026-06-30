@@ -240,6 +240,12 @@ def overall(findings: list[Finding]) -> str:
     return "healthy"
 
 
+def health_score(findings: list[Finding]) -> int:
+    """0-100 audit-health score. Penalises fails and warnings, not optional infos."""
+    score = 100 - sum({"fail": 30, "warn": 10}.get(f.severity, 0) for f in findings)
+    return max(0, min(100, score))
+
+
 _MARK = {"fail": "[FAIL]", "warn": "[warn]", "info": "[info]", "pass": "[ ok ]"}
 
 
@@ -255,7 +261,10 @@ def render(findings: list[Finding], root: str | Path) -> str:
         head = "-> Setup is healthy; a few optional suggestions below."
     else:
         head = "-> Setup looks healthy."
-    lines = [f"cc-bench doctor - setup audit of {Path(root)}", head, ""]
+    score = health_score(findings)
+    lines = [f"cc-bench doctor - setup audit of {Path(root)}",
+             f"Setup health: {score}/100 (audit health, not a success guarantee - run to confirm).",
+             head, ""]
     order = {"fail": 0, "warn": 1, "info": 2, "pass": 3}
     for f in sorted(findings, key=lambda x: order.get(x.severity, 9)):
         lines.append(f"{_MARK.get(f.severity, '[?]')} {f.rule}: {f.message}")
@@ -270,4 +279,4 @@ def render(findings: list[Finding], root: str | Path) -> str:
 
 
 __all__ = ["Finding", "audit", "apply_fixes", "render", "summary", "overall",
-           "STARTER_CLAUDE_MD"]
+           "health_score", "STARTER_CLAUDE_MD"]

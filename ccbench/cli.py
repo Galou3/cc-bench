@@ -10,7 +10,7 @@ from pathlib import Path
 from . import __version__
 from .agents import available_agents, make_agent
 from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
-from .doctor import apply_fixes, audit, render as render_doctor, summary as doctor_summary
+from .doctor import apply_fixes, audit, health_score, render as render_doctor, summary as doctor_summary
 from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
@@ -149,7 +149,9 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         if actions:
             findings = audit(args.dir)  # re-audit so the report reflects the fixes
     if args.json:
-        print(json.dumps([f.to_dict() for f in findings], indent=2))
+        print(json.dumps({"score": health_score(findings),
+                          "summary": doctor_summary(findings),
+                          "findings": [f.to_dict() for f in findings]}, indent=2))
     else:
         print(render_doctor(findings, args.dir))
     return 1 if doctor_summary(findings)["fail"] else 0

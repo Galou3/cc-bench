@@ -1,6 +1,6 @@
 import json
 
-from ccbench.doctor import apply_fixes, audit, render, summary
+from ccbench.doctor import apply_fixes, audit, health_score, render, summary
 
 
 def _find(findings, rule):
@@ -66,6 +66,17 @@ def test_test_command_flagged_when_absent(tmp_path):
 def test_test_command_not_flagged_when_present(tmp_path):
     (tmp_path / "CLAUDE.md").write_text("# Project\nRun tests with `pytest -q`.\n", encoding="utf-8")
     assert _find(audit(tmp_path), "claude_md.test_command") is None
+
+
+def test_health_score_drops_on_fail(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("\n".join(f"l{i}" for i in range(600)), encoding="utf-8")
+    s = health_score(audit(tmp_path))
+    assert 0 <= s < 100
+
+
+def test_health_score_full_when_only_infos(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("# P\nRun tests with `pytest -q`.\n", encoding="utf-8")
+    assert health_score(audit(tmp_path)) == 100
 
 
 def test_render_has_productivity_headline(tmp_path):
