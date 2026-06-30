@@ -87,6 +87,10 @@ class Condition:
     agent_args: tuple[str, ...] = ()
     rationale: str = ""
     citation: tuple[str, ...] = ()
+    # Free-form annotations. Real adapters ignore it; the mock agent reads
+    # ``mock_success_prob`` here to inject a known ground-truth effect, which is
+    # what lets the calibration test prove the analysis detects real differences.
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "Condition":
@@ -97,6 +101,7 @@ class Condition:
             agent_args=tuple(d.get("agent_args", ())),
             rationale=str(d.get("rationale", "")),
             citation=tuple(d.get("citation", ())),
+            metadata=dict(d.get("metadata", {})),
         )
 
 
