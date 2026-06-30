@@ -1,9 +1,10 @@
 # cc-bench
 
-**Does your Claude Code setup actually help?** A reproducible, evidence-based
-benchmark harness that measures whether a way of *using* a coding agent
-(a `CLAUDE.md`, plan mode, a context strategy…) really changes the task success
-rate — with confidence intervals, not vibes.
+**Get more out of Claude Code & Codex.** cc-bench finds what's quietly holding your
+AI coder back — a bloated `CLAUDE.md`, a misconfigured setup — and fixes it in one
+command. And when you want proof a change *actually* helps, it measures it on your
+own tasks (with real statistics underneath, for when you ask "but does it really
+work?").
 
 [![CI](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml)
 ![tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
@@ -16,20 +17,29 @@ rate — with confidence intervals, not vibes.
 
 ---
 
-## The problem
+## Make your setup better in 30 seconds (free, offline)
 
-There is a lot of *folklore* about using a coding agent well — "write a
-`CLAUDE.md`", "use plan mode", "keep the context small". Most of it is plausible.
-Almost none of it is **measured** on your own tasks. So you can't tell whether a
-tweak helped, hurt, or just burned tokens.
-
-cc-bench turns *"I think this helps"* into *"this moved the pass rate from X% to
-Y% (95% CI …, n = Z, p = …)"* — and it refuses to call a noisy difference a win.
-
-## See it in 30 seconds (no API key, no cost)
+Your AI coder's output depends on *how it's set up* — yet most "best practices"
+("write a `CLAUDE.md`", "keep context small", "use plan mode") are folklore nobody
+checks. Start by fixing yours:
 
 ```bash
 pip install -e .
+ccbench doctor          # audit your CLAUDE.md / AGENTS.md / settings.json
+ccbench doctor --fix    # apply safe fixes (e.g. drop a concise starter CLAUDE.md)
+```
+
+`doctor` flags what's likely costing you quality — a 600-line `CLAUDE.md`, a broken
+`settings.json`, a `MEMORY.md` past the load limit — and tells you exactly how to
+fix it, each with a citation into [`EVIDENCE.md`](EVIDENCE.md). Works for Claude
+Code **and** Codex (`AGENTS.md`). No API key, no cost.
+
+## Then prove it actually helps
+
+Folklore is cheap. cc-bench lets you *measure* whether a setup change really moves
+your agent's success rate — on your own tasks, not someone's blog:
+
+```bash
 ccbench run --suite suites/sample --conditions conditions --agent mock --reps 30
 ```
 
@@ -49,23 +59,6 @@ reports **not proven** rather than overclaim. Honesty is the default.
 > The mock uses *injected* ground-truth probabilities, so these numbers prove the
 > **harness can detect an effect of that size at that n** — not anything about a
 > real agent. Swap in `--agent claude` to measure for real.
-
-## Improve your Claude Code setup in one command
-
-Most people will never write a benchmark — but everyone has a `.claude/` they could
-improve. `ccbench doctor` audits it against the evidence in seconds, free, offline:
-
-```bash
-ccbench doctor          # audit CLAUDE.md / settings.json / subagents / memory
-ccbench doctor --fix    # apply safe fixes (e.g. drop a concise starter CLAUDE.md)
-```
-
-It flags patterns the literature says are likely harmful — a 600-line `CLAUDE.md`
-(or `AGENTS.md`, the file OpenAI Codex reads), a broken `settings.json`, a
-`MEMORY.md` past the load limit — each with a concrete fix **and a citation** into
-[`EVIDENCE.md`](EVIDENCE.md). Works for Claude Code *and* Codex users. Honest by
-design: doctor checks *known* best practices; to prove a change helped *your*
-tasks, run the benchmark below.
 
 ## How it works
 
