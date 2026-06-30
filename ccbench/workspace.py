@@ -51,6 +51,15 @@ def apply_condition(workspace: str | Path, condition: Condition) -> list[str]:
     return written
 
 
+def add_files(workspace: str | Path, src_dir: str | Path) -> None:
+    """Copy the contents of ``src_dir`` into the workspace (overwriting).
+
+    Used by the runner to drop held-out tests in *after* the agent has finished,
+    so the agent never sees them.
+    """
+    shutil.copytree(Path(src_dir), Path(workspace), dirs_exist_ok=True)
+
+
 def _is_within(root: str | Path, target: str | Path) -> bool:
     root_resolved = Path(root).resolve()
     try:
@@ -60,4 +69,4 @@ def _is_within(root: str | Path, target: str | Path) -> bool:
         return False
 
 
-__all__ = ["prepare_workspace", "apply_condition"]
+__all__ = ["prepare_workspace", "apply_condition", "add_files"]

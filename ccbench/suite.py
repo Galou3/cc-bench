@@ -65,12 +65,20 @@ def load_suite(suite_dir: str | Path) -> tuple[str, list[Task]]:
                 raise SuiteError(
                     f"task '{task.id}': reference_dir does not exist: {reference}"
                 )
+        hidden = None
+        if task.hidden_tests_dir:
+            hidden = (suite_dir / task.hidden_tests_dir).resolve()
+            if not hidden.is_dir():
+                raise SuiteError(
+                    f"task '{task.id}': hidden_tests_dir does not exist: {hidden}"
+                )
 
         tasks.append(
             replace(
                 task,
                 template_dir=str(template),
                 reference_dir=(str(reference) if reference else None),
+                hidden_tests_dir=(str(hidden) if hidden else None),
             )
         )
 
