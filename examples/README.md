@@ -24,6 +24,10 @@ against the live `claude` CLI (haiku-4.5, ~$0.86). Both conditions hit 100% →
 honest **"not proven"**: these tasks are too easy to reveal a config effect (a
 ceiling effect). It proves the adapter works and that cc-bench won't overclaim.
 
+[`real-claude-hard-report.md`](real-claude-hard-report.md) is the same on the
+**hard** suite (held-out tests): baseline drops to 87.5% (off the ceiling) — and it
+documents a real grader bug the run surfaced (and its fix).
+
 ### FAQ
 - **Is this a claim that a `CLAUDE.md` helps?** No. The mock demo proves the
   *method*. To make a real claim, run `--agent claude` on your own tasks.
@@ -58,6 +62,10 @@ le CLI `claude` (haiku-4.5, ~0,86 $). Les deux conditions atteignent 100 % →
 **« not proven »** honnête : ces tâches sont trop faciles pour révéler un effet de
 config (effet plafond). Ça prouve que l'adaptateur marche et que cc-bench ne
 surinterprète pas.
+
+[`real-claude-hard-report.md`](real-claude-hard-report.md) est l'équivalent sur la
+suite **hard** (tests cachés) : la baseline descend à 87,5 % (sous le plafond) — et
+documente un vrai bug de grader que le run a révélé (et sa correction).
 
 ### FAQ
 - **Est-ce une preuve qu'un `CLAUDE.md` aide ?** Non. La démo mock prouve la

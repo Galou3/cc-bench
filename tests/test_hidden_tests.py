@@ -42,6 +42,35 @@ def test_reference_passes_hidden_tests(tmp_path):
     assert run.results and all(r.passed for r in run.results)
 
 
+def test_agent_authored_tests_do_not_pollute_grading(tmp_path):
+    # An agent may write its own (possibly broken) test files in the workspace.
+    # When verify_cmd targets the held-out test, those must not affect the verdict.
+    t = tmp_path / "suite2"
+    (t / "tasks" / "x" / "workspace").mkdir(parents=True)
+    (t / "tasks" / "x" / "reference").mkdir(parents=True)
+    (t / "tasks" / "x" / "hidden").mkdir(parents=True)
+    (t / "tasks" / "x" / "workspace" / "m.py").write_text("def f():\n    return 0\n", encoding="utf-8")
+    # a broken test the "agent" left behind (errors at collection)
+    (t / "tasks" / "x" / "workspace" / "test_bogus.py").write_text(
+        "def test_oops(missing_fixture):\n    assert missing_fixture\n", encoding="utf-8")
+    (t / "tasks" / "x" / "reference" / "m.py").write_text("def f():\n    return 42\n", encoding="utf-8")
+    (t / "tasks" / "x" / "hidden" / "test_hidden.py").write_text(
+        "from m import f\n\n\ndef test_f():\n    assert f() == 42\n", encoding="utf-8")
+    (t / "tasks.yaml").write_text(textwrap.dedent("""
+        name: hid2
+        tasks:
+          - id: x
+            prompt: make f() return 42
+            template_dir: tasks/x/workspace
+            reference_dir: tasks/x/reference
+            hidden_tests_dir: tasks/x/hidden
+            verify_cmd: ["python", "-m", "pytest", "-q", "test_hidden.py"]
+    """), encoding="utf-8")
+    run = run_suite(t, [Condition(name="c", metadata={"mock_success_prob": 1.0})],
+                    make_agent("mock"), reps=1, seed=0)
+    assert run.results and all(r.passed for r in run.results)
+
+
 def test_stub_fails_hidden_tests(tmp_path):
     # The agent never sees the hidden test; the stub returns the wrong value,
     # so grading against the held-out test fails - exactly what keeps a hard

@@ -7,7 +7,7 @@ tasks:
     template_dir: tasks/merge_intervals/workspace
     reference_dir: tasks/merge_intervals/reference
     hidden_tests_dir: tasks/merge_intervals/hidden
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_hidden_merge_intervals.py"]
     timeout_s: 300
     tags: [hard]
     prompt: |
@@ -44,7 +44,7 @@ tasks:
     template_dir: tasks/roman/workspace
     reference_dir: tasks/roman/reference
     hidden_tests_dir: tasks/roman/hidden
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_hidden_roman.py"]
     timeout_s: 300
     tags: [hard]
     prompt: |
@@ -80,7 +80,7 @@ tasks:
     template_dir: tasks/lru_cache/workspace
     reference_dir: tasks/lru_cache/reference
     hidden_tests_dir: tasks/lru_cache/hidden
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_hidden_lru_cache.py"]
     timeout_s: 300
     tags: [hard]
     prompt: |
@@ -117,7 +117,7 @@ tasks:
     template_dir: tasks/json_path/workspace
     reference_dir: tasks/json_path/reference
     hidden_tests_dir: tasks/json_path/hidden
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_hidden_json_path.py"]
     timeout_s: 300
     tags: [hard]
     prompt: |
