@@ -1,0 +1,36 @@
+# Project CI for cc-bench.
+#
+# This lives in ci/ rather than .github/workflows/ only because it was first
+# pushed with a GitHub token lacking the `workflow` OAuth scope. To ACTIVATE it:
+#
+#   gh auth refresh -h github.com -s workflow      # grant the scope once
+#   git mv ci/ci.yml .github/workflows/ci.yml
+#   git commit -m "ci: activate GitHub Actions" && git push
+#
+# (Or just add it through the GitHub web UI: Actions -> set up a workflow.)
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Unit tests
+        run: pytest -q
+      - name: Smoke - mock pipeline (zero API cost)
+        run: ccbench run --suite suites/sample --conditions conditions --agent mock --reps 3

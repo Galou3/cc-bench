@@ -5,12 +5,15 @@ benchmark harness that measures whether a way of *using* a coding agent
 (a `CLAUDE.md`, plan mode, a context strategy…) really changes the task success
 rate — with confidence intervals, not vibes.
 
-[![CI](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml)
+![tests](https://img.shields.io/badge/tests-46%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+<sub>CI config lives in [`ci/ci.yml`](ci/ci.yml); move it to `.github/workflows/`
+to activate Actions (see the file header).</sub>
+
 > **Status: alpha.** The mock pipeline runs end-to-end today with zero API cost;
-> the real `claude` adapter works and a `codex` adapter is on the [roadmap](ROADMAP.md).
+> the real `claude` adapter works and an experimental `codex` adapter is included.
 > Every recommendation the project ships is traceable to [`EVIDENCE.md`](EVIDENCE.md).
 
 ---
@@ -134,6 +137,7 @@ language-agnostic.
 | `tests/` | 41 tests incl. the calibration proof |
 | `EVIDENCE.md` | 40 cited sources behind every recommendation |
 | `METHODOLOGY.md` | stats + threats to validity |
+| `ci/ci.yml` | CI workflow (move to `.github/workflows/` to activate) |
 
 ## En français
 

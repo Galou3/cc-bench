@@ -18,7 +18,8 @@ default instead of folklore.
 - [x] Wilson rate CIs, bootstrap difference CI, two-proportion z-test.
 - [x] Multiple-comparison correction (Holm-Bonferroni, BH-FDR).
 - [x] Markdown/CSV reports with an honest two-gate verdict.
-- [x] 41 tests incl. a seeded **calibration** proof; CI on Python 3.10–3.12.
+- [x] 46 tests incl. a seeded **calibration** proof; CI config (pytest 3.10–3.12
+      + mock smoke) in `ci/ci.yml`, one move away from active Actions.
 - [x] Evidence base of 40 cited sources ([`EVIDENCE.md`](EVIDENCE.md)).
 
 ## SMART objectives (12-month horizon)
