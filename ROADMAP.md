@@ -1,7 +1,7 @@
 # Roadmap
 
 **North star:** become the standard, rigorous way to test whether *how you use a
-coding agent* actually helps — adopted widely enough to make "measure it" the
+coding agent* actually helps - adopted widely enough to make "measure it" the
 default instead of folklore.
 
 > **Honesty note.** Popularity targets (e.g. "5,000 GitHub stars") and headline
@@ -18,29 +18,29 @@ default instead of folklore.
 - [x] Wilson rate CIs, bootstrap difference CI, two-proportion z-test.
 - [x] Multiple-comparison correction (Holm-Bonferroni, BH-FDR).
 - [x] Markdown/CSV reports with an honest two-gate verdict.
-- [x] `pass@k` (Chen et al. 2021) and multi-seed **robustness** (mean ± SD).
-- [x] `ccbench doctor` — evidence-based audit of `CLAUDE.md` / `AGENTS.md` /
+- [x] `pass@k` (Chen et al. 2021) and multi-seed **robustness** (mean +/- SD).
+- [x] `ccbench doctor` - evidence-based audit of `CLAUDE.md` / `AGENTS.md` /
       settings (+ `--fix`); covers Claude Code **and** Codex.
-- [x] `ccbench compare` — head-to-head of two runs (claude vs codex, before/after).
+- [x] `ccbench compare` - head-to-head of two runs (claude vs codex, before/after).
 - [x] Experimental `codex` adapter; JavaScript sample suite (language-agnostic).
 - [x] **Held-out tests** (`hidden_tests_dir`) + a **hard** suite (merge_intervals,
       roman, lru_cache, json_path) that sits below the 100% ceiling.
 - [x] 64 tests incl. a seeded **calibration** proof; **CI live on GitHub Actions**
-      (pytest 3.10–3.12 + mock smoke) on every push/PR.
+      (pytest 3.10-3.12 + mock smoke) on every push/PR.
 - [x] Evidence base of 40 cited sources ([`EVIDENCE.md`](EVIDENCE.md)).
 
 ## SMART objectives (12-month horizon)
 
-- **Specific** — ship a CLI + library (and a thin VS Code task / GitHub Action)
+- **Specific** - ship a CLI + library (and a thin VS Code task / GitHub Action)
   to A/B coding-agent configurations on user-supplied tasks.
-- **Measurable** — internal: ≥ 90% line coverage on `ccbench/`; calibration test
+- **Measurable** - internal: ≥ 90% line coverage on `ccbench/`; calibration test
   green; a real-agent case study with a statistically significant result.
   External (aspirational): GitHub stars and downstream adoption.
-- **Achievable** — the engine is provider-agnostic (adapters) and language-
+- **Achievable** - the engine is provider-agnostic (adapters) and language-
   agnostic (`verify_cmd`), so new agents/languages are additive, not rewrites.
-- **Realistic** — target 5 common languages via example suites within the year
-  (Python, JavaScript, Go, Java, C++) — each is "add a suite", not new code.
-- **Time-bound** — milestones M1–M4 below, each with a date window.
+- **Realistic** - target 5 common languages via example suites within the year
+  (Python, JavaScript, Go, Java, C++) - each is "add a suite", not new code.
+- **Time-bound** - milestones M1-M4 below, each with a date window.
 
 ## Milestones
 
@@ -51,13 +51,13 @@ flowchart LR
   M3 --> M4[M4 - mo 6: robustness + prompt-injection tests, docs, v1.0]
 ```
 
-- **M1 (months 1–2) — v0.1 core.** Done: harness, mock + claude adapters, stats,
+- **M1 (months 1-2) - v0.1 core.** Done: harness, mock + claude adapters, stats,
   tests, CI, evidence base.
-- **M2 (months 3–4) — breadth.** Codex adapter; JS/Go/Java/C++ example suites;
+- **M2 (months 3-4) - breadth.** Codex adapter; JS/Go/Java/C++ example suites;
   Claude-vs-Codex case study on identical tasks.
-- **M3 (month 5) — depth.** `pass@k` metric; per-task stratified estimates
+- **M3 (month 5) - depth.** `pass@k` metric; per-task stratified estimates
   (mitigate Simpson's paradox); `ccbench init` scaffolder; reusable GitHub Action.
-- **M4 (month 6) — hardening & v1.0.** Robustness (variance across seeds/prompt
+- **M4 (month 6) - hardening & v1.0.** Robustness (variance across seeds/prompt
   paraphrases), prompt-injection / adversarial condition tests, optional static-
   analysis of generated code, full docs, release.
 
@@ -86,7 +86,7 @@ flowchart LR
 
 - **Provider/API drift.** `claude`/`codex` CLI output formats change; parsing is
   isolated + defensive, and pinned in docs per version.
-- **Nondeterminism.** Real agents are stochastic — handled by reps + CIs, but
+- **Nondeterminism.** Real agents are stochastic - handled by reps + CIs, but
   small suites still swing; we surface n and intervals.
 - **Contamination & overfitting.** Public tasks may be trained on; prefer private
   tasks for absolute claims (relative comparisons largely cancel it).

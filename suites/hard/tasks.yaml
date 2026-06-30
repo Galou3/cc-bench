@@ -149,7 +149,7 @@ tasks:
       Return `default` (and stop) the first time ANY step fails for any of these reasons:
       - missing dict key,
       - list index out of range,
-      - type mismatch — indexing a non-list (e.g. `[0]` applied to a dict or scalar) or keying
+      - type mismatch - indexing a non-list (e.g. `[0]` applied to a dict or scalar) or keying
         a non-dict (e.g. `.name` applied to a list or scalar).
       
       IMPORTANT DETAILS

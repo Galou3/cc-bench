@@ -1,7 +1,7 @@
 # Contributing to cc-bench
 
 Thanks for considering a contribution. cc-bench aims to be small, honest, and
-easy to trust — contributions that keep it that way are very welcome.
+easy to trust - contributions that keep it that way are very welcome.
 
 ## Setup
 
@@ -22,7 +22,7 @@ that way unless there is a strong reason (open an issue first).
   `workspace/` (broken code + a failing test) and a held-out `reference/`. Run it
   with `--agent mock` to confirm tasks start broken and the reference fixes them.
 - **A new condition.** A YAML file in `conditions/` with `inject_files`,
-  `agent_args`, and — required by project policy — a `rationale` and a `citation`
+  `agent_args`, and - required by project policy - a `rationale` and a `citation`
   into [`EVIDENCE.md`](EVIDENCE.md). If you can't cite it, label it a hypothesis.
 - **A new agent adapter.** Implement the `Agent` protocol in `ccbench/agents/`
   (mutate the workspace, return `Usage`), register it in `agents/__init__.py`, and

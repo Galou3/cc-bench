@@ -6,23 +6,23 @@ tests are **held out** from the agent. 16 runs (2 conditions x 4 tasks x 2 reps)
 
 ## What this run taught us (the honest version)
 
-1. **The hard suite left the 100% ceiling** — `baseline` came in at **87.5%**, not
+1. **The hard suite left the 100% ceiling** - `baseline` came in at **87.5%**, not
    100%. The held-out-tests mechanism works end-to-end against a real agent. That
    was the goal of building this suite.
 
 2. **The single "failure" was a grader bug, not the agent.** On
    `baseline/merge_intervals` the agent's solution actually *passed* the held-out
    tests, but it had also written its **own** throwaway test file in the workspace,
-   and that file errored at collection — so plain `pytest` (which collects
+   and that file errored at collection - so plain `pytest` (which collects
    everything in the workspace) failed the run. **Fix:** for held-out-test tasks,
    `verify_cmd` now targets only the hidden test file, so agent-authored tests
    can't pollute grading. With that fix, all 16 solutions pass.
 
 3. **Honest conclusion:** at this model/difficulty there is **no measurable config
-   effect** (`+12.5%`, p = 0.30 → *not proven*), and once the grader artifact is
+   effect** (`+12.5%`, p = 0.30 -> *not proven*), and once the grader artifact is
    removed both conditions are effectively at ceiling again. To surface a real
    "this setup helps/hurts" result you need **harder tasks** (or a weaker model)
-   **and many more reps** — not folklore. cc-bench refusing to claim a win here is
+   **and many more reps** - not folklore. cc-bench refusing to claim a win here is
    the feature working as intended.
 
 > This report is kept as-is (pre-fix) for transparency - it's a real debugging

@@ -3,26 +3,26 @@
 cc-bench is not the first tool to evaluate coding agents. This page maps the
 neighbours, says honestly where they are stronger, and explains the specific gap
 cc-bench fills. (Landscape informed by an automated survey; corrections welcome
-via PR — see a tool we mischaracterised? open an issue.)
+via PR - see a tool we mischaracterised? open an issue.)
 
 ## The landscape
 
-**Agentic coding benchmarks & harnesses** — large, realistic task sets:
-- [SWE-bench](https://github.com/SWE-bench/SWE-bench) / SWE-bench Verified — real
+**Agentic coding benchmarks & harnesses** - large, realistic task sets:
+- [SWE-bench](https://github.com/SWE-bench/SWE-bench) / SWE-bench Verified - real
   GitHub issues; the field standard. Heavy per-task environments and Docker.
 - [SWE-agent](https://github.com/SWE-agent/SWE-agent) and
-  [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) — agent scaffolds
+  [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent) - agent scaffolds
   with their own evaluation paths.
 - [OpenHands](https://github.com/All-Hands-AI/OpenHands) evaluation,
-  [moatless-tools](https://github.com/aorwall/moatless-tools) — agent platforms
+  [moatless-tools](https://github.com/aorwall/moatless-tools) - agent platforms
   with eval harnesses.
 - [Aider polyglot benchmark](https://aider.chat/docs/leaderboards/),
   [LiveCodeBench](https://livecodebench.github.io/),
   [BigCodeBench](https://github.com/bigcode-project/bigcodebench),
   [EvalPlus](https://github.com/evalplus/evalplus) (HumanEval+/MBPP+),
-  [Terminal-Bench](https://www.tbench.ai/) — code/agent leaderboards.
+  [Terminal-Bench](https://www.tbench.ai/) - code/agent leaderboards.
 
-**General eval frameworks** — flexible, mature, broad:
+**General eval frameworks** - flexible, mature, broad:
 - [OpenAI Evals](https://github.com/openai/evals),
   [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness),
   [Inspect](https://inspect.aisi.org.uk/) (UK AISI),
@@ -32,14 +32,14 @@ via PR — see a tool we mischaracterised? open an issue.)
   [Langfuse](https://github.com/langfuse/langfuse),
   [Braintrust](https://www.braintrust.dev/).
 
-**Prompt/program optimisers** — they *change* the prompt, not just measure it:
+**Prompt/program optimisers** - they *change* the prompt, not just measure it:
 - [DSPy](https://github.com/stanfordnlp/dspy),
   [GEPA](https://github.com/gepa-ai/gepa), Arize prompt-learning.
 
-**On statistical rigour in evals** — the motivation for cc-bench's stats:
+**On statistical rigour in evals** - the motivation for cc-bench's stats:
 - Anthropic, [*Adding Error Bars to Evals*](https://www.anthropic.com/research/statistical-approach-to-model-evals).
-- [*The Leaderboard Illusion*](https://arxiv.org/abs/2504.20879) — how leaderboards mislead.
-- Chatbot Arena / [LMArena](https://lmarena.ai/) — reports Bradley-Terry bootstrap CIs.
+- [*The Leaderboard Illusion*](https://arxiv.org/abs/2504.20879) - how leaderboards mislead.
+- Chatbot Arena / [LMArena](https://lmarena.ai/) - reports Bradley-Terry bootstrap CIs.
 
 ## Common mistakes cc-bench avoids
 
@@ -54,7 +54,7 @@ via PR — see a tool we mischaracterised? open an issue.)
 4. **Heavy setup / cost as a barrier.** Docker-per-task and large deps deter
    casual use. cc-bench is stdlib + PyYAML, and a deterministic mock runs the full
    pipeline offline for free (great for CI).
-5. **LLM-as-judge noise.** cc-bench grades by executing the task's own tests —
+5. **LLM-as-judge noise.** cc-bench grades by executing the task's own tests -
    reproducible, auditable, no judge variance.
 6. **Contamination treated as someone else's problem.** Public benchmarks leak
    into training data. cc-bench is built for *your* (possibly private) tasks; for
@@ -63,17 +63,17 @@ via PR — see a tool we mischaracterised? open an issue.)
 ## Where the others are stronger (honestly)
 
 - **Task realism & scale:** SWE-bench/Terminal-Bench offer thousands of real,
-  hard tasks. cc-bench ships a tiny demo suite — you bring the realistic ones.
+  hard tasks. cc-bench ships a tiny demo suite - you bring the realistic ones.
 - **Maturity & features:** Inspect/promptfoo/DeepEval are full platforms (tracing,
   datasets, dashboards, many providers). cc-bench is intentionally small.
 - **Optimisation:** DSPy/GEPA *improve* prompts automatically; cc-bench only
-  *measures*. Use them together — optimise, then prove the gain with cc-bench.
+  *measures*. Use them together - optimise, then prove the gain with cc-bench.
 
 ## The gap cc-bench fills
 
 > A cheap, rigorous, reproducible way to test whether **a way of using a coding
 > agent** helps **on your own tasks**, with honest statistics and a zero-cost CI
-> loop — and an evidence base ([`EVIDENCE.md`](EVIDENCE.md)) so every default is
+> loop - and an evidence base ([`EVIDENCE.md`](EVIDENCE.md)) so every default is
 > backed by a citation, not folklore.
 
 ## Drop-in adoption

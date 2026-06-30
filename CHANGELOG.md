@@ -19,7 +19,7 @@ First public release.
   experimental `codex` adapter.
 - **Analysis**: Wilson rate intervals, bootstrap difference CI, two-proportion
   z-test, Holm-Bonferroni / BH-FDR multiple-comparison correction, `pass@k`
-  (Chen et al. 2021), and multi-seed **robustness** (mean ± SD).
+  (Chen et al. 2021), and multi-seed **robustness** (mean +/- SD).
 - **Reports** (Markdown + CSV) with an honest two-gate verdict and a loud
   `SIMULATED` banner for mock runs.
 - **CLI**: `run`, `report`, `compare` (head-to-head, e.g. claude vs codex),

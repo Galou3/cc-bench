@@ -11,21 +11,21 @@ ccbench report runs/latest --conditions conditions --out examples/sample-report.
 ```
 
 It shows the two outcomes that matter:
-- `with-claude-md` → **+30.0%** (95% CI excludes 0, p = 0.0001): a *proven*
+- `with-claude-md` -> **+30.0%** (95% CI excludes 0, p = 0.0001): a *proven*
   improvement.
-- `bloated-context` → −13.3% with raw p = 0.046 but a CI that touches 0:
+- `bloated-context` -> -13.3% with raw p = 0.046 but a CI that touches 0:
   **not proven**. cc-bench refuses to overclaim a borderline effect.
 
 Remember: the mock uses *injected* probabilities, so this proves the harness can
-*detect* an effect — not anything about a real agent. Use `--agent claude` for real.
+*detect* an effect - not anything about a real agent. Use `--agent claude` for real.
 
 **Real run:** [`real-claude-report.md`](real-claude-report.md) is an actual run
-against the live `claude` CLI (haiku-4.5, ~$0.86). Both conditions hit 100% →
+against the live `claude` CLI (haiku-4.5, ~$0.86). Both conditions hit 100% ->
 honest **"not proven"**: these tasks are too easy to reveal a config effect (a
 ceiling effect). It proves the adapter works and that cc-bench won't overclaim.
 
 [`real-claude-hard-report.md`](real-claude-hard-report.md) is the same on the
-**hard** suite (held-out tests): baseline drops to 87.5% (off the ceiling) — and it
+**hard** suite (held-out tests): baseline drops to 87.5% (off the ceiling) - and it
 documents a real grader bug the run surfaced (and its fix).
 
 ### FAQ
@@ -48,23 +48,23 @@ ccbench report runs/latest --conditions conditions --out examples/sample-report.
 ```
 
 Il montre les deux cas qui comptent :
-- `with-claude-md` → **+30,0 %** (l'IC à 95 % exclut 0, p = 0,0001) : amélioration
+- `with-claude-md` -> **+30,0 %** (l'IC à 95 % exclut 0, p = 0,0001) : amélioration
   *prouvée*.
-- `bloated-context` → −13,3 % avec p brut = 0,046 mais un IC qui touche 0 :
+- `bloated-context` -> -13,3 % avec p brut = 0,046 mais un IC qui touche 0 :
   **non prouvé**. `cc-bench` refuse de surinterpréter un effet limite.
 
 À retenir : le mock utilise des probabilités *injectées* ; cela prouve que le
-harness sait *détecter* un effet — pas quoi que ce soit sur un vrai agent. Pour du
+harness sait *détecter* un effet - pas quoi que ce soit sur un vrai agent. Pour du
 réel : `--agent claude`.
 
 **Run réel :** [`real-claude-report.md`](real-claude-report.md) est un vrai run sur
-le CLI `claude` (haiku-4.5, ~0,86 $). Les deux conditions atteignent 100 % →
+le CLI `claude` (haiku-4.5, ~0,86 $). Les deux conditions atteignent 100 % ->
 **« not proven »** honnête : ces tâches sont trop faciles pour révéler un effet de
 config (effet plafond). Ça prouve que l'adaptateur marche et que cc-bench ne
 surinterprète pas.
 
 [`real-claude-hard-report.md`](real-claude-hard-report.md) est l'équivalent sur la
-suite **hard** (tests cachés) : la baseline descend à 87,5 % (sous le plafond) — et
+suite **hard** (tests cachés) : la baseline descend à 87,5 % (sous le plafond) - et
 documente un vrai bug de grader que le run a révélé (et sa correction).
 
 ### FAQ

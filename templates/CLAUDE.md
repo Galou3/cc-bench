@@ -2,7 +2,7 @@
 
 > Starter CLAUDE.md from `ccbench doctor --fix`. Keep it **short** (< 200 lines):
 > long memory files consume context and reduce instruction adherence
-> (Anthropic guidance; lost-in-the-middle / context-rot — see cc-bench EVIDENCE.md).
+> (Anthropic guidance; lost-in-the-middle / context-rot - see cc-bench EVIDENCE.md).
 > Delete this quote once you've adapted the file.
 
 ## What this project is
