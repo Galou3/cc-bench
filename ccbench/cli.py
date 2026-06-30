@@ -11,6 +11,7 @@ from . import __version__
 from .agents import available_agents, make_agent
 from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
 from .doctor import apply_fixes, audit, health_score, render as render_doctor, summary as doctor_summary
+from .fromrepo import add_task_to_suite, make_task
 from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
@@ -140,6 +141,14 @@ def _cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_from_repo(args: argparse.Namespace) -> int:
+    entry = make_task(args.module, args.test, args.out, args.id, prompt=args.prompt)
+    add_task_to_suite(args.out, entry, args.suite_name)
+    print(f"created held-out task '{args.id}' in suite {args.out}")
+    print(f"  try: ccbench run --suite {args.out} --conditions conditions --agent mock --reps 5")
+    return 0
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     findings = audit(args.dir)
     if args.fix:
@@ -210,6 +219,15 @@ def build_parser() -> argparse.ArgumentParser:
     ini = sub.add_parser("init", help="scaffold a runnable starter suite + conditions")
     ini.add_argument("--dir", default=".", help="directory to scaffold into (default: cwd)")
     ini.set_defaults(func=_cmd_init)
+
+    fr = sub.add_parser("from-repo", help="turn your own tested module into a held-out task")
+    fr.add_argument("--module", required=True, help="path to the source module to benchmark")
+    fr.add_argument("--test", required=True, help="path to its test file (held out at grading)")
+    fr.add_argument("--id", required=True, help="task id")
+    fr.add_argument("--out", default="ccbench_suite", help="suite directory to create/update")
+    fr.add_argument("--suite-name", default="from-repo")
+    fr.add_argument("--prompt", default=None)
+    fr.set_defaults(func=_cmd_from_repo)
 
     doc = sub.add_parser("doctor", help="audit a Claude Code setup against the evidence")
     doc.add_argument("--dir", default=".", help="project root to audit (default: cwd)")
