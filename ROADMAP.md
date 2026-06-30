@@ -18,7 +18,12 @@ default instead of folklore.
 - [x] Wilson rate CIs, bootstrap difference CI, two-proportion z-test.
 - [x] Multiple-comparison correction (Holm-Bonferroni, BH-FDR).
 - [x] Markdown/CSV reports with an honest two-gate verdict.
-- [x] 46 tests incl. a seeded **calibration** proof; CI config (pytest 3.10–3.12
+- [x] `pass@k` (Chen et al. 2021) and multi-seed **robustness** (mean ± SD).
+- [x] `ccbench doctor` — evidence-based audit of `CLAUDE.md` / `AGENTS.md` /
+      settings (+ `--fix`); covers Claude Code **and** Codex.
+- [x] `ccbench compare` — head-to-head of two runs (claude vs codex, before/after).
+- [x] Experimental `codex` adapter; JavaScript sample suite (language-agnostic).
+- [x] 64 tests incl. a seeded **calibration** proof; CI config (pytest 3.10–3.12
       + mock smoke) in `ci/ci.yml`, one move away from active Actions.
 - [x] Evidence base of 40 cited sources ([`EVIDENCE.md`](EVIDENCE.md)).
 

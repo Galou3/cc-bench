@@ -5,7 +5,7 @@ benchmark harness that measures whether a way of *using* a coding agent
 (a `CLAUDE.md`, plan mode, a context strategy…) really changes the task success
 rate — with confidence intervals, not vibes.
 
-![tests](https://img.shields.io/badge/tests-46%20passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-64%20passing-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -62,11 +62,12 @@ ccbench doctor          # audit CLAUDE.md / settings.json / subagents / memory
 ccbench doctor --fix    # apply safe fixes (e.g. drop a concise starter CLAUDE.md)
 ```
 
-It flags patterns the literature says are likely harmful — a 600-line `CLAUDE.md`,
-a broken `settings.json`, a `MEMORY.md` past the load limit — each with a concrete
-fix **and a citation** into [`EVIDENCE.md`](EVIDENCE.md). Honest by design: doctor
-checks *known* best practices; to prove a change helped *your* tasks, run the
-benchmark below.
+It flags patterns the literature says are likely harmful — a 600-line `CLAUDE.md`
+(or `AGENTS.md`, the file OpenAI Codex reads), a broken `settings.json`, a
+`MEMORY.md` past the load limit — each with a concrete fix **and a citation** into
+[`EVIDENCE.md`](EVIDENCE.md). Works for Claude Code *and* Codex users. Honest by
+design: doctor checks *known* best practices; to prove a change helped *your*
+tasks, run the benchmark below.
 
 ## How it works
 
@@ -142,6 +143,18 @@ conditions/
 Then `ccbench run --suite suites/mysuite --conditions conditions --agent claude`.
 `verify_cmd` is any command (`pytest`, `npm test`, `go test`…), so cc-bench is
 language-agnostic.
+
+## Commands at a glance
+
+| Command | What it does |
+|---|---|
+| `ccbench doctor [--fix]` | audit (and safely fix) your `CLAUDE.md` / `AGENTS.md` / `settings.json` against the evidence |
+| `ccbench init` | scaffold a runnable starter suite + conditions into any repo |
+| `ccbench run --agent mock\|claude\|codex` | run a suite across conditions; save a report |
+| `ccbench run --seeds 0,1,2` | multi-seed run → robustness (mean ± SD per condition) |
+| `ccbench compare runA runB` | head-to-head of two runs (e.g. **claude vs codex**) |
+| `ccbench report <dir>` | render Markdown/CSV from a saved run |
+| `ccbench agents` | list available agents |
 
 ## Project layout
 
