@@ -116,6 +116,41 @@ def audit(root: str | Path) -> list[Finding]:
                 citation="EVIDENCE.md > Claude Code usage [8]",
             ))
 
+        markers = ("<Project name>", "<command>", "<One or two sentences",
+                   "<formatting/lint", "<things NOT derivable", "<generated files")
+        if any(m in text for m in markers):
+            out.append(Finding(
+                "claude_md.placeholders", "warn",
+                "CLAUDE.md still contains starter placeholders (<...>).",
+                fix="Replace them with your project's real run/test commands and conventions.",
+                citation="EVIDENCE.md > Claude Code usage",
+            ))
+
+    # --- AGENTS.md (the instruction file OpenAI Codex reads) ---------------
+    agents_md = root / "AGENTS.md"
+    if agents_md.is_file():
+        n = len(agents_md.read_text(encoding="utf-8", errors="replace").splitlines())
+        if n > CLAUDE_MD_HARD_MAX:
+            out.append(Finding(
+                "agents_md.length", "fail",
+                f"AGENTS.md is {n} lines (> {CLAUDE_MD_HARD_MAX}); same long-context cost "
+                "as an over-long CLAUDE.md.",
+                fix="Trim to the essentials (< 200 lines).",
+                citation="EVIDENCE.md > Long-context behavior [10][11][13]"))
+        elif n > CLAUDE_MD_SOFT_MAX:
+            out.append(Finding(
+                "agents_md.length", "warn",
+                f"AGENTS.md is {n} lines (> {CLAUDE_MD_SOFT_MAX}). Keep it concise.",
+                citation="EVIDENCE.md > Long-context behavior"))
+        else:
+            out.append(Finding("agents_md.length", "pass", f"AGENTS.md is {n} lines (concise)."))
+    else:
+        out.append(Finding(
+            "agents_md.present", "info",
+            "No AGENTS.md (the instruction file OpenAI Codex reads).",
+            fix="If you use Codex (`codex exec`), add a concise AGENTS.md alongside CLAUDE.md.",
+            citation="Codex AGENTS.md convention"))
+
     # --- settings.json -----------------------------------------------------
     settings_path = root / ".claude" / "settings.json"
     if settings_path.is_file():

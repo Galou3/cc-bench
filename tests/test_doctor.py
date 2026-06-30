@@ -47,6 +47,17 @@ def test_permissions_allowlist_passes(tmp_path):
     assert _find(audit(tmp_path), "settings.permissions").severity == "pass"
 
 
+def test_flags_unfilled_starter_placeholders(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("# <Project name>\n- Run: `<command>`\n", encoding="utf-8")
+    assert _find(audit(tmp_path), "claude_md.placeholders").severity == "warn"
+
+
+def test_agents_md_absent_is_info_present_long_fails(tmp_path):
+    assert _find(audit(tmp_path), "agents_md.present").severity == "info"
+    (tmp_path / "AGENTS.md").write_text("\n".join(f"l{i}" for i in range(600)), encoding="utf-8")
+    assert _find(audit(tmp_path), "agents_md.length").severity == "fail"
+
+
 def test_render_and_exit_signal(tmp_path):
     (tmp_path / "CLAUDE.md").write_text("\n".join(f"l{i}" for i in range(600)), encoding="utf-8")
     findings = audit(tmp_path)
