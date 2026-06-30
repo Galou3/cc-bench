@@ -20,7 +20,7 @@ import csv
 import io
 from typing import Sequence
 
-from .analysis import compare_all, summarize_condition
+from .analysis import compare_all, pass_at_k_mean, summarize_condition
 from .models import Condition, RunResult, SuiteRun
 
 _MOCK_BANNER = (
@@ -129,6 +129,29 @@ def render_markdown(
         "baseline._"
     )
     lines.append("")
+
+    # pass@k by condition (only the k that are estimable for every task)
+    k_values = [1, 2, 5]
+    cols = [k for k in k_values
+            if any(pass_at_k_mean(suite_run.for_condition(n), k) is not None
+                   for n in suite_run.conditions)]
+    if cols:
+        lines.append("## pass@k by condition")
+        lines.append("")
+        lines.append("| Condition | " + " | ".join(f"pass@{k}" for k in cols) + " |")
+        lines.append("|---|" + "---:|" * len(cols))
+        for name in suite_run.conditions:
+            cells = []
+            for k in cols:
+                v = pass_at_k_mean(suite_run.for_condition(name), k)
+                cells.append(f"{v:.1%}" if v is not None else "-")
+            lines.append(f"| `{name}` | " + " | ".join(cells) + " |")
+        lines.append("")
+        lines.append(
+            "_pass@k = unbiased estimator (Chen et al. 2021): chance that at least one "
+            "of k samples passes, averaged over tasks. '-' = fewer than k reps for some task._"
+        )
+        lines.append("")
 
     # Conditions tested (rationale + evidence)
     if cond_by_name:

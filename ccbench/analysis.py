@@ -359,9 +359,48 @@ def compare_all(
     return [replace(c, p_adjusted=a, correction=correction) for c, a in zip(comps, adjusted)]
 
 
+# --------------------------------------------------------------------------- #
+# pass@k
+# --------------------------------------------------------------------------- #
+def pass_at_k(n: int, c: int, k: int) -> float:
+    """Unbiased pass@k estimator (Chen et al. 2021, HumanEval): the probability
+    that at least one of k samples drawn (without replacement) from n total, of
+    which c passed, is correct. Assumes 1 <= k <= n and 0 <= c <= n.
+
+    Uses the numerically stable product form rather than binomial coefficients.
+    """
+    if c <= 0:
+        return 0.0
+    if n - c < k:
+        return 1.0
+    prob_all_fail = 1.0
+    for i in range(n - c + 1, n + 1):
+        prob_all_fail *= 1.0 - k / i
+    return 1.0 - prob_all_fail
+
+
+def pass_at_k_mean(results: Sequence[RunResult], k: int) -> float | None:
+    """Mean pass@k over tasks (each task weighted equally). Returns None if k < 1
+    or any task has fewer than k decided runs (pass@k is not estimable there)."""
+    if k < 1:
+        return None
+    by_task: dict[str, list[RunResult]] = {}
+    for r in results:
+        by_task.setdefault(r.task_id, []).append(r)
+    if not by_task:
+        return None
+    vals = []
+    for rs in by_task.values():
+        cnt = count_outcomes(rs)
+        if cnt.decided < k:
+            return None
+        vals.append(pass_at_k(cnt.decided, cnt.passes, k))
+    return sum(vals) / len(vals)
+
+
 __all__ = [
     "Counts", "count_outcomes", "wilson_interval", "RateSummary",
     "summarize_condition", "two_proportion_p", "bootstrap_diff_ci",
     "Comparison", "compare", "holm_bonferroni", "benjamini_hochberg",
-    "adjust_pvalues", "compare_all",
+    "adjust_pvalues", "compare_all", "pass_at_k", "pass_at_k_mean",
 ]

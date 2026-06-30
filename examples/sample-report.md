@@ -1,7 +1,7 @@
 # cc-bench report - suite `sample`
 
 - Agent: `mock` | Conditions: 3 | Seed: 0 | Total runs: 270
-- Generated: 2026-06-30T17:55:24+00:00
+- Generated: 2026-06-30T18:35:06+00:00
 
 > **SIMULATED RUN (agent = `mock`).** These numbers use injected ground-truth probabilities; they demonstrate that the harness *detects* an effect of this size at this sample size - they are NOT a measurement of any real agent. Re-run with `--agent claude` for real results.
 
@@ -22,6 +22,16 @@
 | `with-claude-md` | +30.0% | [+15.6%, +43.3%] | 0.0001 | 0.0001 | [+] improvement |
 
 _Verdict is `improvement`/`regression` only when the difference CI excludes 0 **and** the holm-adjusted p < 0.05. Otherwise `not proven` - usually meaning the effect (if any) is smaller than this sample size can resolve: add reps. p-values are corrected for testing 2 variant(s) against one baseline._
+
+## pass@k by condition
+
+| Condition | pass@1 | pass@2 | pass@5 |
+|---|---:|---:|---:|
+| `baseline` | 34.4% | 57.7% | 89.8% |
+| `bloated-context` | 21.1% | 37.1% | 66.5% |
+| `with-claude-md` | 64.4% | 86.9% | 99.4% |
+
+_pass@k = unbiased estimator (Chen et al. 2021): chance that at least one of k samples passes, averaged over tasks. '-' = fewer than k reps for some task._
 
 ## Conditions tested
 

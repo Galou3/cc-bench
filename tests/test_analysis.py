@@ -2,7 +2,8 @@ import math
 
 from ccbench.analysis import (
     _z_for_confidence, benjamini_hochberg, compare, count_outcomes,
-    holm_bonferroni, summarize_condition, two_proportion_p, wilson_interval,
+    holm_bonferroni, pass_at_k, pass_at_k_mean, summarize_condition,
+    two_proportion_p, wilson_interval,
 )
 from ccbench.models import Outcome, RunResult, Usage
 
@@ -62,3 +63,25 @@ def test_compare_detects_effect():
 def test_compare_null_not_proven():
     c = compare(_results("b", 40, 20), _results("v", 40, 20), "b", "v", bootstrap_iters=2000, seed=1)
     assert c.verdict == "not proven" and not c.significant
+
+
+def test_pass_at_k_known_values():
+    assert abs(pass_at_k(5, 2, 1) - 0.4) < 1e-9
+    assert pass_at_k(5, 0, 1) == 0.0
+    assert pass_at_k(5, 2, 5) == 1.0
+    assert abs(pass_at_k(10, 5, 2) - (1 - 10 / 45)) < 1e-9
+
+
+def test_pass_at_k_monotonic_in_k():
+    vals = [pass_at_k(10, 3, k) for k in (1, 2, 3, 4)]
+    assert all(a <= b + 1e-12 for a, b in zip(vals, vals[1:]))
+
+
+def test_pass_at_k_mean_over_tasks():
+    res = []
+    for i in range(5):  # task A: 2/5 pass
+        res.append(RunResult("A", "c", i, Outcome.PASS if i < 2 else Outcome.FAIL, Usage(), 0.0))
+    for i in range(5):  # task B: 4/5 pass
+        res.append(RunResult("B", "c", i, Outcome.PASS if i < 4 else Outcome.FAIL, Usage(), 0.0))
+    assert abs(pass_at_k_mean(res, 1) - 0.6) < 1e-9          # (0.4 + 0.8) / 2
+    assert pass_at_k_mean(res, 6) is None                     # k > reps for a task
