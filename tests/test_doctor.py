@@ -58,6 +58,22 @@ def test_agents_md_absent_is_info_present_long_fails(tmp_path):
     assert _find(audit(tmp_path), "agents_md.length").severity == "fail"
 
 
+def test_test_command_flagged_when_absent(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("# Project\nSome prose about the project.\n", encoding="utf-8")
+    assert _find(audit(tmp_path), "claude_md.test_command") is not None
+
+
+def test_test_command_not_flagged_when_present(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("# Project\nRun tests with `pytest -q`.\n", encoding="utf-8")
+    assert _find(audit(tmp_path), "claude_md.test_command") is None
+
+
+def test_render_has_productivity_headline(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("\n".join(f"l{i}" for i in range(600)), encoding="utf-8")
+    text = render(audit(tmp_path), tmp_path)
+    assert "costing you quality" in text
+
+
 def test_render_and_exit_signal(tmp_path):
     (tmp_path / "CLAUDE.md").write_text("\n".join(f"l{i}" for i in range(600)), encoding="utf-8")
     findings = audit(tmp_path)

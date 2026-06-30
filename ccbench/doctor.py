@@ -126,6 +126,19 @@ def audit(root: str | Path) -> list[Finding]:
                 citation="EVIDENCE.md > Claude Code usage",
             ))
 
+        low = text.lower()
+        test_hints = ("pytest", "unittest", "npm test", "npm run", "yarn test", "pnpm",
+                      "go test", "cargo test", "make test", "mvn test", "gradle", "jest",
+                      "vitest", "tox", "rspec", "phpunit", "dotnet test", "ctest")
+        if _nonblank_lines(text) > 0 and not any(h in low for h in test_hints):
+            out.append(Finding(
+                "claude_md.test_command", "info",
+                "CLAUDE.md doesn't seem to state how to run the project's tests.",
+                fix="Add the exact command (e.g. `pytest -q`, `npm test`). Telling the agent "
+                    "how to verify its own work is one of the highest-leverage lines in a CLAUDE.md.",
+                citation="EVIDENCE.md > Claude Code usage (best practices)",
+            ))
+
     # --- AGENTS.md (the instruction file OpenAI Codex reads) ---------------
     agents_md = root / "AGENTS.md"
     if agents_md.is_file():
@@ -242,7 +255,18 @@ _MARK = {"fail": "[FAIL]", "warn": "[warn]", "info": "[info]", "pass": "[ ok ]"}
 
 
 def render(findings: list[Finding], root: str | Path) -> str:
-    lines = [f"cc-bench doctor - setup audit of {Path(root)}", ""]
+    c = summary(findings)
+    if c["fail"]:
+        head = (f"-> {c['fail']} blocking issue(s)"
+                + (f" + {c['warn']} warning(s)" if c["warn"] else "")
+                + " likely costing you quality. Fix with `ccbench doctor --fix` or by hand below.")
+    elif c["warn"]:
+        head = f"-> {c['warn']} thing(s) likely costing you quality - see below (some auto-fixable: --fix)."
+    elif c["info"]:
+        head = "-> Setup is healthy; a few optional suggestions below."
+    else:
+        head = "-> Setup looks healthy."
+    lines = [f"cc-bench doctor - setup audit of {Path(root)}", head, ""]
     order = {"fail": 0, "warn": 1, "info": 2, "pass": 3}
     for f in sorted(findings, key=lambda x: order.get(x.severity, 9)):
         lines.append(f"{_MARK.get(f.severity, '[?]')} {f.rule}: {f.message}")
