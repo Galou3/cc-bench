@@ -1,0 +1,16 @@
+name: js_sample
+description: >
+  A JavaScript (Node) task proving cc-bench is language-agnostic: verify_cmd is
+  just `node --test`, with no Python in the graded code. Same shape as the Python
+  suite - broken code + a failing test, plus a held-out reference solution.
+tasks:
+  - id: fizzbuzz_js
+    template_dir: tasks/fizzbuzz/workspace
+    reference_dir: tasks/fizzbuzz/reference
+    verify_cmd: ["node", "--test"]
+    timeout_s: 120
+    tags: [javascript, logic]
+    prompt: |
+      fizzbuzz(n) in fizzbuzz.js should return "Fizz" for multiples of 3, "Buzz"
+      for 5, "FizzBuzz" for both, otherwise String(n). The test currently fails.
+      Fix fizzbuzz.js so it passes. Do not modify the test.
