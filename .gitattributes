@@ -1,0 +1,7 @@
+# Store LF in the repo, check out native. Keeps blobs, hashes and diffs stable
+# across the Windows dev box and Linux CI so a "change" is always a real change.
+* text=auto eol=lf
+
+# Binary assets git must not touch.
+*.png binary
+*.gif binary
