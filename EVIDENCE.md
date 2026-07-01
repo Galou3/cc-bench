@@ -158,3 +158,28 @@ Note: HumanEval/MBPP numbers above are self-reported in each model's own technic
 - [119] Long Context vs. RAG for LLMs: An Evaluation and Revisits (arXiv:2501.01880) - https://arxiv.org/abs/2501.01880
 - [120] LaRA: Benchmarking Retrieval-Augmented Generation and Long-Context LLMs - No Silver Bullet for LC or RAG Routing (arXiv:2502.09977) - https://arxiv.org/abs/2502.09977
 - [121] LongBench Pro: A More Realistic and Comprehensive Bilingual Long-Context Evaluation Benchmark (arXiv:2601.02872) - https://arxiv.org/abs/2601.02872
+
+## Safe autonomous execution (guardrails)
+
+These back cc-bench's execution model (held-out tests, optional sandbox) and are
+useful for running any agent autonomously. Anthropic primary sources, unanimously
+verified.
+
+- Isolate first: Claude Code confines agent file writes to the working directory
+  and routes network egress through an out-of-sandbox default-deny proxy; the
+  open-source sandbox-runtime uses bubblewrap (Linux) / Seatbelt (macOS) [S1][S2][S3].
+- Least privilege: read-only by default (only ls/cat/git status run unprompted);
+  any state-modifying command needs approval [S2].
+- Do not let the agent edit or delete tests (it can hide missing functionality);
+  Anthropic instructs long-running agents not to modify tests [S4]. cc-bench
+  enforces this structurally via held-out tests.
+- Self-verify by running builds/tests/lints so the agent catches its own mistakes
+  [S5]. External threat framework: OWASP Top 10 for Agentic Applications 2026 [S6].
+
+References (safety):
+- [S1] Claude Code sandboxing - https://www.anthropic.com/engineering/claude-code-sandboxing
+- [S2] Claude Code security docs - https://code.claude.com/docs/en/security
+- [S3] sandbox-runtime - https://github.com/anthropic-experimental/sandbox-runtime
+- [S4] Effective harnesses for long-running agents - https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
+- [S5] Claude Code best practices - https://code.claude.com/docs/en/best-practices
+- [S6] OWASP Top 10 for Agentic Applications 2026 - https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/
