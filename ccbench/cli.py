@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -303,7 +304,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    return args.func(args)
+    try:
+        return args.func(args)
+    except (SuiteError, ValueError, FileNotFoundError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except subprocess.CalledProcessError as exc:
+        err = (exc.stderr or b"").decode("utf-8", "replace").strip() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        print(f"error: command failed ({' '.join(map(str, exc.cmd))}): {err}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

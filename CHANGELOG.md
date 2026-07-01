@@ -14,7 +14,15 @@ All notable changes to cc-bench are documented here. The format follows
   sign test answers "does it generalize?". Reports and CLI now say "on this
   suite" and report task flips explicitly.
 
+### Fixed
+- **Reward-hacking hole closed.** The runner restores the template's test files
+  after the agent finishes and before grading, and bundled suites' verify_cmd
+  targets exact test files, so an agent rewriting visible tests cannot grade as
+  PASS (encoded as a TamperAgent regression test).
+
 ### Added
+- `ccbench validate`: checks every task discriminates (workspace fails,
+  reference passes); from-repo / from-git auto-validate the task they create.
 - `conditions/placebo-claude-md.yaml`: a placebo arm (same-length, content-free
   CLAUDE.md) as a built-in negative control; see METHODOLOGY > Controls.
 - `ccbench from-git`: held-out tasks from your repo's git history (SWE-bench-style

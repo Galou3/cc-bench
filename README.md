@@ -202,6 +202,7 @@ language-agnostic.
 | `ccbench doctor [--fix]` | audit (and safely fix) your `CLAUDE.md` / `AGENTS.md` / `settings.json` against the evidence |
 | `ccbench from-git --commit SHA --id ID` | build a held-out task from your git history (SWE-bench-style, on your repo) |
 | `ccbench from-repo --module M --test T --id ID` | turn a single tested module into a held-out task |
+| `ccbench validate --suite DIR` | check every task discriminates (workspace fails, reference passes) |
 | `ccbench init` | scaffold a runnable starter suite + conditions into any repo |
 | `ccbench run --agent mock\|claude\|codex` | run a suite across conditions; save a report |
 | `ccbench run --seeds 0,1,2` | multi-seed run -> robustness (mean +/- SD per condition) |
