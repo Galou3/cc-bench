@@ -7,8 +7,8 @@ import io
 from typing import Sequence
 
 from .analysis import (
-    adjust_pvalues, compare, compare_all, distinct_seeds, pass_at_k_mean,
-    robustness, summarize_condition,
+    adjust_pvalues, compare, compare_all_stratified, distinct_seeds,
+    pass_at_k_mean, robustness, summarize_condition,
 )
 from .models import Condition, RunResult, SuiteRun
 
@@ -88,35 +88,47 @@ def render_markdown(
         )
     lines.append("")
 
-    # Comparisons vs baseline (with multiple-comparison correction)
-    lines.append(f"## Change vs baseline `{base}`")
+    # Comparisons vs baseline: task-stratified, two-level verdicts
+    lines.append(f"## Change vs baseline `{base}` (on this task suite)")
     lines.append("")
     lines.append(
-        f"| Condition | delta pass rate | {pct}% CI (bootstrap) | p (raw) | p ({correction}) | verdict |"
+        f"| Condition | mean per-task delta | {pct}% CI | p (perm, {correction}) | tasks +/=/- | verdict |"
     )
-    lines.append("|---|---:|---:|---:|---:|:--|")
+    lines.append("|---|---:|---:|---:|:---:|:--|")
     base_results = suite_run.for_condition(base)
     variants = [(name, suite_run.for_condition(name)) for name in suite_run.conditions if name != base]
-    comps = compare_all(
+    comps = compare_all_stratified(
         base, base_results, variants,
-        confidence=confidence, bootstrap_iters=bootstrap_iters, seed=seed, correction=correction,
+        confidence=confidence, iters=bootstrap_iters, seed=seed, correction=correction,
     )
     for cmp in comps:
         mark = {"improvement": "[+] improvement", "regression": "[-] regression",
                 "not proven": "[~] not proven"}[cmp.verdict]
-        padj = cmp.p_adjusted if cmp.p_adjusted is not None else cmp.p_value
         lines.append(
-            f"| `{cmp.variant}` | {cmp.diff:+.1%} | [{cmp.diff_ci_low:+.1%}, {cmp.diff_ci_high:+.1%}] | "
-            f"{cmp.p_value:.4f} | {padj:.4f} | {mark} |"
+            f"| `{cmp.variant}` | {cmp.mean_diff:+.1%} | [{cmp.ci_low:+.1%}, {cmp.ci_high:+.1%}] | "
+            f"{cmp.effective_p:.4f} | {cmp.tasks_improved}/{cmp.tasks_tied}/{cmp.tasks_regressed} | {mark} |"
         )
     lines.append("")
     lines.append(
-        "_Verdict is `improvement`/`regression` only when the difference CI excludes 0 "
-        f"**and** the {correction}-adjusted p < {1 - confidence:.2f}. Otherwise `not proven` - "
-        "usually meaning the effect (if any) is smaller than this sample size can resolve: "
-        f"add reps. p-values are corrected for testing {len(variants)} variant(s) against one "
-        "baseline._"
+        "_Suite-level verdict: `improvement`/`regression` only when the CI excludes 0 **and** "
+        f"the {correction}-adjusted permutation p < {1 - confidence:.2f}. The permutation shuffles "
+        "condition labels WITHIN each task, so task difficulty and run-to-run clustering cannot "
+        "fake an effect. This verdict applies to THESE tasks._"
     )
+    lines.append("")
+    lines.append("**Does it generalize beyond this suite?** (task-level sign test)")
+    lines.append("")
+    for cmp in comps:
+        n_tasks = len(cmp.tasks)
+        if cmp.sign_p < 1 - confidence:
+            note = f"likely (sign p = {cmp.sign_p:.3f})"
+        else:
+            note = (f"not proven (sign p = {cmp.sign_p:.2f}) - "
+                    "add tasks (`ccbench from-git`) to test generalization")
+        lines.append(
+            f"- `{cmp.variant}`: {cmp.tasks_improved} improved / {cmp.tasks_regressed} regressed "
+            f"/ {cmp.tasks_tied} tied across {n_tasks} task(s) -> {note}"
+        )
     lines.append("")
 
     # pass@k by condition (only the k that are estimable for every task)

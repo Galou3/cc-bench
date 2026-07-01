@@ -1,4 +1,5 @@
 condition,passes,fails,timeouts,errors,decided,rate,ci_low,ci_high,mean_in_tok,mean_out_tok,mean_cost_usd,mean_turns
 baseline,31,59,0,0,90,0.344444,0.254459,0.447165,1172.22,303.33,0.000000,1.34
 bloated-context,19,71,0,0,90,0.211111,0.139526,0.306348,1105.56,263.33,0.000000,1.21
+placebo-claude-md,35,55,0,0,90,0.388889,0.294699,0.492175,1194.44,316.67,0.000000,1.39
 with-claude-md,58,32,0,0,90,0.644444,0.541502,0.735561,1322.22,393.33,0.000000,1.64

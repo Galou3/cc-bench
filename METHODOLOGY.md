@@ -30,19 +30,34 @@ score interval**, which stays well-calibrated at the small sample sizes typical
 of agent benchmarks, unlike the normal (Wald) approximation (degenerate near 0/1
 and at small n) or a naive bootstrap of a proportion.
 
-### Difference vs baseline - bootstrap CI + z-test
-For each variant vs the baseline cc-bench reports:
-- the **difference** in pass rate (`variant - baseline`),
-- a **percentile bootstrap confidence interval** for that difference (drawn via
-  `Binomial(n, p̂)`, which is exactly the resampling distribution of a 0/1 sample
-  but far cheaper), and
-- a **pooled two-proportion z-test** p-value.
+### Difference vs baseline - two levels of claim
 
-A result is called **significant** only when **both** gates pass: the bootstrap
-CI excludes 0 **and** the (adjusted) p-value is below `α = 1 - confidence`.
-Otherwise the verdict is **`not proven`** - which, at small n, usually means the
-effect (if any) is smaller than the sample can resolve. That is the correct
-scientific statement, not a tool failure.
+Runs cluster by task: an agent is often near-deterministic on a given task, so
+10 reps of one task carry far less evidence than 10 independent tasks. Pooling
+all reps into one binomial (what most eval tools do, and what cc-bench itself
+did before its own adversarial review) can turn ONE deterministic task flip
+into p < 0.001 - a number that reads as a general claim while the evidence is
+"one task out of three". cc-bench therefore separates two claims:
+
+**Level 1 - did it help on THIS suite?**
+- Statistic: the unweighted **mean per-task difference** in pass rate.
+- p-value: a **stratified permutation test** - condition labels are shuffled
+  WITHIN each task, so task difficulty and run-to-run clustering cannot fake an
+  effect. Exact under exchangeability, robust at small n.
+- CI: a **within-task bootstrap** (tasks fixed, runs resampled per task), i.e.
+  the uncertainty of the effect on these tasks.
+- Verdict `improvement`/`regression` requires the CI to exclude 0 **and** the
+  (Holm-adjusted) permutation p below `alpha = 1 - confidence`; else `not proven`.
+
+**Level 2 - does it generalize beyond this suite?**
+- Unit of evidence: the **task** (improved / regressed / tied).
+- An exact **sign test** on task flips. With 3-4 tasks this is almost never
+  significant - and that is the honest answer: few tasks cannot establish a
+  general claim, no matter how many reps you run. The report says so and points
+  to `ccbench from-git` to grow the task set.
+
+The legacy pooled comparison (`compare`: binomial bootstrap + two-proportion
+z-test) remains in the library for single-task data and cross-run comparisons.
 
 ### Multiple comparisons
 Testing several variants against one baseline inflates the family-wise false-
@@ -57,6 +72,16 @@ Every run is parameterised by a `seed`. The mock agent is a pure function of
 `(seed, task, condition, rep)` (SHA-256 -> uniform), so the same command yields
 the same results, and parallelism (when added) cannot perturb them. Results are
 saved as JSONL with the metadata needed to reproduce them.
+
+### Controls
+`conditions/placebo-claude-md.yaml` is a **negative control**: a CLAUDE.md of
+similar length whose content is generic and task-irrelevant. Interpretation:
+- treatment beats baseline AND placebo does not -> the effect comes from the
+  content of the guidance, not the mere presence of a file;
+- a placebo that "wins" is a red flag for a broken experiment (harness bias,
+  contamination, too little data).
+Run it alongside your real conditions; it costs one extra arm and buys a lot of
+credibility.
 
 ## Self-validation: the calibration test
 
@@ -77,10 +102,11 @@ guard behind every "improvement" cc-bench reports.
 - **Statistical power / small n.** A 3-task suite at 5 reps has very wide
   intervals. cc-bench surfaces the interval and the n precisely so you do not
   over-read noise. Add tasks and reps to resolve smaller effects.
-- **Pooling across tasks (Simpson's paradox).** The headline rate pools all
-  `task x rep` runs. If conditions interact with task difficulty, the pooled
-  number can mislead. *Planned:* per-task stratified estimates. For now, inspect
-  per-task breakdowns when conditions and tasks are not balanced.
+- **Pooling across tasks.** Found by our own adversarial review and fixed: the
+  headline verdict is now task-stratified (permutation within task + per-task
+  effects + a task-level sign test for generalization) instead of pooling
+  `task x rep` runs as iid. The per-condition Wilson table still shows the
+  pooled run-level rate; read it as descriptive, not inferential.
 - **Agent nondeterminism.** Real agents are stochastic; that variance is exactly
   what the reps + CIs are meant to capture, but it also means small suites can
   swing run to run. Use enough reps.

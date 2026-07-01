@@ -381,6 +381,199 @@ def pass_at_k_mean(results: Sequence[RunResult], k: int) -> float | None:
 
 
 # --------------------------------------------------------------------------- #
+# Task-stratified inference (scope-honest verdicts)
+# --------------------------------------------------------------------------- #
+def _pass_lists_by_task(results: Iterable[RunResult]) -> dict[str, list[int]]:
+    """Decided runs (ERROR excluded) grouped by task as 0/1 pass lists."""
+    by: dict[str, list[int]] = {}
+    for r in results:
+        if r.outcome is Outcome.ERROR:
+            continue
+        by.setdefault(r.task_id, []).append(1 if r.outcome is Outcome.PASS else 0)
+    return by
+
+
+def _shared_tasks(a_by: dict, b_by: dict) -> list[str]:
+    return sorted(t for t in a_by if t in b_by and a_by[t] and b_by[t])
+
+
+def _mean_task_diff(a_by, b_by, tasks) -> float:
+    diffs = [sum(b_by[t]) / len(b_by[t]) - sum(a_by[t]) / len(a_by[t]) for t in tasks]
+    return sum(diffs) / len(diffs)
+
+
+def stratified_permutation_p(
+    baseline_results: Sequence[RunResult],
+    variant_results: Sequence[RunResult],
+    iters: int = 5000,
+    seed: int = 0,
+) -> tuple[float, float, list[str]]:
+    """Two-sided permutation p for the mean per-task pass-rate difference.
+
+    Condition labels are permuted WITHIN each task, so task difficulty and
+    run-to-run clustering cannot masquerade as a config effect. Returns
+    (p_value, observed_mean_diff, shared_tasks).
+    """
+    a_by, b_by = _pass_lists_by_task(baseline_results), _pass_lists_by_task(variant_results)
+    tasks = _shared_tasks(a_by, b_by)
+    if not tasks:
+        return 1.0, 0.0, tasks
+    obs = _mean_task_diff(a_by, b_by, tasks)
+    combined = {t: a_by[t] + b_by[t] for t in tasks}
+    na = {t: len(a_by[t]) for t in tasks}
+    rng = random.Random(seed)
+    hits = 0
+    for _ in range(iters):
+        s = 0.0
+        for t in tasks:
+            c = combined[t]
+            rng.shuffle(c)
+            k = na[t]
+            s += sum(c[k:]) / (len(c) - k) - sum(c[:k]) / k
+        if abs(s / len(tasks)) >= abs(obs) - 1e-12:
+            hits += 1
+    return (hits + 1) / (iters + 1), obs, tasks
+
+
+def within_task_bootstrap_ci(
+    baseline_results: Sequence[RunResult],
+    variant_results: Sequence[RunResult],
+    confidence: float = 0.95,
+    iters: int = 5000,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Percentile bootstrap CI for the mean per-task diff, resampling runs
+    within each task (tasks fixed: this is the effect on THIS suite)."""
+    a_by, b_by = _pass_lists_by_task(baseline_results), _pass_lists_by_task(variant_results)
+    tasks = _shared_tasks(a_by, b_by)
+    if not tasks:
+        return (0.0, 0.0)
+    rng = random.Random(seed)
+    pa = {t: sum(a_by[t]) / len(a_by[t]) for t in tasks}
+    pb = {t: sum(b_by[t]) / len(b_by[t]) for t in tasks}
+    na = {t: len(a_by[t]) for t in tasks}
+    nb = {t: len(b_by[t]) for t in tasks}
+    stats = []
+    for _ in range(iters):
+        s = 0.0
+        for t in tasks:
+            ka = sum(1 for _ in range(na[t]) if rng.random() < pa[t])
+            kb = sum(1 for _ in range(nb[t]) if rng.random() < pb[t])
+            s += kb / nb[t] - ka / na[t]
+        stats.append(s / len(tasks))
+    stats.sort()
+    alpha = 1.0 - confidence
+    lo = stats[max(0, int((alpha / 2) * iters))]
+    hi = stats[min(iters - 1, int((1 - alpha / 2) * iters))]
+    return (lo, hi)
+
+
+def task_sign_test(improved: int, regressed: int) -> float:
+    """Exact two-sided sign test on per-task flips (ties excluded)."""
+    m = improved + regressed
+    if m == 0:
+        return 1.0
+    k = max(improved, regressed)
+    tail = sum(math.comb(m, i) for i in range(k, m + 1)) / 2 ** m
+    return min(1.0, 2.0 * tail)
+
+
+@dataclass(frozen=True, slots=True)
+class StratifiedComparison:
+    """Two-level comparison: suite-level significance + task-level generalization."""
+
+    baseline: str
+    variant: str
+    tasks: tuple[str, ...]
+    mean_diff: float
+    ci_low: float
+    ci_high: float
+    perm_p: float
+    tasks_improved: int
+    tasks_regressed: int
+    tasks_tied: int
+    sign_p: float
+    confidence: float
+    p_adjusted: float | None = None
+    correction: str = "none"
+
+    @property
+    def effective_p(self) -> float:
+        return self.p_adjusted if self.p_adjusted is not None else self.perm_p
+
+    @property
+    def significant(self) -> bool:
+        alpha = 1.0 - self.confidence
+        ci_excludes_zero = self.ci_low > 0 or self.ci_high < 0
+        return ci_excludes_zero and self.effective_p < alpha
+
+    @property
+    def verdict(self) -> str:
+        if not self.significant:
+            return "not proven"
+        return "improvement" if self.mean_diff > 0 else "regression"
+
+    def to_dict(self) -> dict:
+        return {
+            "baseline": self.baseline, "variant": self.variant,
+            "tasks": list(self.tasks), "mean_diff": self.mean_diff,
+            "ci_low": self.ci_low, "ci_high": self.ci_high,
+            "perm_p": self.perm_p, "p_adjusted": self.p_adjusted,
+            "correction": self.correction, "tasks_improved": self.tasks_improved,
+            "tasks_regressed": self.tasks_regressed, "tasks_tied": self.tasks_tied,
+            "sign_p": self.sign_p, "significant": self.significant,
+            "verdict": self.verdict, "confidence": self.confidence,
+        }
+
+
+def compare_stratified(
+    baseline_results: Sequence[RunResult],
+    variant_results: Sequence[RunResult],
+    baseline_name: str,
+    variant_name: str,
+    confidence: float = 0.95,
+    iters: int = 5000,
+    seed: int = 0,
+) -> StratifiedComparison:
+    a_by, b_by = _pass_lists_by_task(baseline_results), _pass_lists_by_task(variant_results)
+    tasks = _shared_tasks(a_by, b_by)
+    imp = reg = tie = 0
+    for t in tasks:
+        ra = sum(a_by[t]) / len(a_by[t])
+        rb = sum(b_by[t]) / len(b_by[t])
+        if rb > ra:
+            imp += 1
+        elif rb < ra:
+            reg += 1
+        else:
+            tie += 1
+    perm_p, obs, _ = stratified_permutation_p(baseline_results, variant_results, iters, seed)
+    lo, hi = within_task_bootstrap_ci(baseline_results, variant_results, confidence, iters, seed)
+    return StratifiedComparison(
+        baseline=baseline_name, variant=variant_name, tasks=tuple(tasks),
+        mean_diff=obs, ci_low=lo, ci_high=hi, perm_p=perm_p,
+        tasks_improved=imp, tasks_regressed=reg, tasks_tied=tie,
+        sign_p=task_sign_test(imp, reg), confidence=confidence,
+    )
+
+
+def compare_all_stratified(
+    baseline_name: str,
+    baseline_results: Sequence[RunResult],
+    variants: Sequence[tuple[str, Sequence[RunResult]]],
+    confidence: float = 0.95,
+    iters: int = 5000,
+    seed: int = 0,
+    correction: str = "holm",
+) -> list[StratifiedComparison]:
+    comps = [compare_stratified(baseline_results, res, baseline_name, name,
+                                confidence=confidence, iters=iters, seed=seed)
+             for name, res in variants]
+    adjusted = adjust_pvalues([c.perm_p for c in comps], correction)
+    return [replace(c, p_adjusted=a, correction=correction) for c, a in zip(comps, adjusted)]
+
+
+# --------------------------------------------------------------------------- #
 # Robustness across seeds
 # --------------------------------------------------------------------------- #
 @dataclass(frozen=True, slots=True)
@@ -441,4 +634,6 @@ __all__ = [
     "Comparison", "compare", "holm_bonferroni", "benjamini_hochberg",
     "adjust_pvalues", "compare_all", "pass_at_k", "pass_at_k_mean",
     "Robustness", "distinct_seeds", "robustness",
+    "StratifiedComparison", "compare_stratified", "compare_all_stratified",
+    "stratified_permutation_p", "within_task_bootstrap_ci", "task_sign_test",
 ]

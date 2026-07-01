@@ -46,15 +46,19 @@ ccbench run --suite suites/sample --conditions conditions --agent mock --reps 30
 Example output (the bundled mock agent; full file in
 [`examples/sample-report.md`](examples/sample-report.md)):
 
-| Condition | Pass rate | 95% CI | Δ vs baseline | p (holm) | verdict |
-|---|---:|---:|---:|---:|:--|
-| `baseline` | 34.4% | [25.4%, 44.7%] | - | - | - |
-| `with-claude-md` | 64.4% | [54.2%, 73.6%] | **+30.0%** | 0.0001 | ✅ improvement |
-| `bloated-context` | 21.1% | [14.0%, 30.6%] | -13.3% | 0.0458 | ~ not proven |
+| Condition | mean delta/task | p (perm, holm) | tasks +/=/- | verdict on this suite |
+|---|---:|---:|:---:|:--|
+| `with-claude-md` | **+30.0%** | 0.0012 | 3/0/0 | [+] improvement |
+| `placebo-claude-md` | +4.4% | 0.6409 | 2/0/1 | [~] not proven |
+| `bloated-context` | -13.3% | 0.1352 | 1/0/2 | [~] not proven |
 
-Read that third row carefully - it is the whole point. The bloated-context drop
-*looks* significant (p = 0.046), but its bootstrap CI touches 0, so cc-bench
-reports **not proven** rather than overclaim. Honesty is the default.
+Three things to read in that table:
+- the planted effect is detected (`with-claude-md`, permutation p = 0.001);
+- the **placebo** (a same-length, content-free CLAUDE.md) correctly shows
+  nothing, a negative control most eval tools do not even have;
+- every verdict says *on this suite*: with only 3 tasks cc-bench also reports
+  "generalization: not proven" instead of pretending 30 reps of the same tasks
+  prove a universal claim. Honesty is the default.
 
 > The mock uses *injected* ground-truth probabilities, so these numbers prove the
 > **harness can detect an effect of that size at that n** - not anything about a
@@ -106,19 +110,32 @@ Three orthogonal pieces:
 ```mermaid
 flowchart TD
   D[Tasks + Conditions] --> M[Metrics: pass rate, tokens, cost]
-  M --> S[Statistics: Wilson CI, bootstrap diff, z-test, Holm/BH]
-  S --> V{CI excludes 0 AND adjusted p < alpha?}
-  V -->|yes| W[improvement / regression]
+  M --> S[Stats: permutation within task, within-task bootstrap CI, Holm/BH]
+  S --> V{CI excludes 0 AND adjusted perm p < alpha?}
+  V -->|yes| W[improvement / regression on this suite]
   V -->|no| N[not proven]
+  W --> G{enough task flips? sign test}
+  G -->|yes| Y[likely generalizes]
+  G -->|no| K[more tasks needed: from-git]
 ```
 
-- **Wilson** intervals for rates, **bootstrap CI + two-proportion z-test** for
-  differences, **Holm-Bonferroni / BH-FDR** for multiple comparisons.
-- A result is "significant" only if the **CI excludes 0 _and_** the adjusted
-  **p < α**. Otherwise: *not proven*.
-- The statistics are themselves **unit-tested**: a seeded Monte Carlo
-  ([`tests/test_calibration.py`](tests/test_calibration.py)) proves the pipeline
-  detects real effects and does not manufacture them under the null.
+- **Two-level verdicts.** Runs cluster by task (agents are often near-deterministic
+  per task), so cc-bench never pools reps as if they were independent. Level 1: a
+  **stratified permutation test** (labels shuffled within each task) + a
+  within-task bootstrap CI decide the effect *on this suite*. Level 2: an exact
+  **sign test on task flips** decides whether it *generalizes*; few tasks means
+  "not proven", never a universal claim.
+- **Controls built in.** A **placebo condition** (same-length, content-free
+  CLAUDE.md) separates "the content helps" from "any file helps", and flags a
+  broken harness if it ever "wins".
+- **Wilson** intervals for descriptive rates, **Holm-Bonferroni / BH-FDR** for
+  multiple comparisons, and a two-gate rule (CI excludes 0 AND adjusted p < alpha).
+- The statistics are themselves **unit-tested**: seeded Monte Carlos
+  ([`tests/test_calibration.py`](tests/test_calibration.py),
+  [`tests/test_stratified.py`](tests/test_stratified.py)) prove the pipeline
+  detects real effects, stays calibrated under task heterogeneity, and does not
+  manufacture wins under the null. The stratified analysis exists because we
+  attacked our own tool and found the pooled version could overstate scope.
 
 Full rationale and limits in [`METHODOLOGY.md`](METHODOLOGY.md). Prior art and how
 cc-bench differs in [`PRIOR_ART.md`](PRIOR_ART.md).

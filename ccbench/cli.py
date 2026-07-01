@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import __version__
 from .agents import available_agents, make_agent
-from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
+from .analysis import compare_all_stratified, distinct_seeds, robustness, summarize_condition
 from .doctor import apply_fixes, audit, health_score, render as render_doctor, summary as doctor_summary
 from .fromrepo import add_task_to_suite, make_task
 from .fromgit import make_task_from_commit
@@ -46,11 +46,14 @@ def _print_summary(run, confidence: float, correction: str = "holm") -> None:
               f"({rs.counts.passes}/{rs.counts.decided})")
     if base:
         variants = [(n, run.for_condition(n)) for n in run.conditions if n != base]
-        comps = compare_all(base, run.for_condition(base), variants,
-                            confidence=confidence, correction=correction)
-        print(f"\nvs baseline `{base}` (p adjusted: {correction}):")
+        comps = compare_all_stratified(base, run.for_condition(base), variants,
+                                       confidence=confidence, correction=correction)
+        print(f"\nvs baseline `{base}` (stratified by task; perm p, {correction}-adjusted):")
         for c in comps:
-            print(f"  {c.variant:20} {c.diff:+6.1%}  p={c.effective_p:.4f}  -> {c.verdict}")
+            gen = "generalizes: likely" if c.sign_p < 1 - confidence else "generalizes: not proven"
+            print(f"  {c.variant:20} {c.mean_diff:+6.1%}/task  p={c.effective_p:.4f}  "
+                  f"tasks +{c.tasks_improved}/={c.tasks_tied}/-{c.tasks_regressed}  "
+                  f"-> {c.verdict} on this suite ({gen})")
     seeds = distinct_seeds(run.results)
     if len(seeds) >= 2:
         print(f"\nrobustness across {len(seeds)} seeds (mean +/- SD):")

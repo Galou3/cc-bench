@@ -1,0 +1,20 @@
+name: placebo-claude-md
+description: Negative control - a CLAUDE.md of similar length whose content is generic and task-irrelevant.
+inject_files:
+  CLAUDE.md: |
+    # Working notes
+    - This repository follows standard conventions for its language.
+    - Keep the codebase tidy and consistent with what is already there.
+    - Prefer clarity over cleverness when both are available options.
+    - Remember that maintainability matters over the long run.
+rationale: >
+  Placebo arm. If with-claude-md beats baseline but this placebo does not, the
+  effect comes from the CONTENT of the guidance, not from the mere presence of a
+  CLAUDE.md file. Standard control-arm logic applied to agent configs; also a
+  built-in check against harness bias (a placebo that "wins" would reveal a
+  broken experiment).
+citation:
+  - "METHODOLOGY.md > Controls"
+metadata:
+  # Ground truth equals baseline: a correct harness must find no effect here.
+  mock_success_prob: 0.40

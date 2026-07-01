@@ -6,7 +6,20 @@ All notable changes to cc-bench are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- **Scope-honest statistics.** Found by our own adversarial review: pooling reps
+  across tasks as iid could turn one deterministic task flip into p < 0.001,
+  overstating the scope of the claim. The headline verdict is now task-stratified
+  (permutation within task + within-task bootstrap CI) and a separate task-level
+  sign test answers "does it generalize?". Reports and CLI now say "on this
+  suite" and report task flips explicitly.
+
 ### Added
+- `conditions/placebo-claude-md.yaml`: a placebo arm (same-length, content-free
+  CLAUDE.md) as a built-in negative control; see METHODOLOGY > Controls.
+- `ccbench from-git`: held-out tasks from your repo's git history (SWE-bench-style
+  construction on your own code).
+- `--sandbox docker`: grading runs in an ephemeral, network-disabled container.
 - `ccbench from-repo`: turn your own tested code into held-out tasks (no authoring).
 - `ccbench compare`: head-to-head of two runs (e.g. claude vs codex).
 - Held-out tests (`hidden_tests_dir`) and a `hard` suite (4 tasks) off the ceiling.

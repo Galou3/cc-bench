@@ -11,10 +11,11 @@ def _run(agent="mock"):
     return SuiteRun("sample", agent, ("baseline", "variant"), tuple(res), 0, "2026-01-01T00:00:00+00:00")
 
 
-def test_markdown_has_mock_banner_and_adjusted_p_column():
+def test_markdown_has_mock_banner_and_two_level_verdicts():
     md = render_markdown(_run("mock"), bootstrap_iters=1000, correction="holm")
     assert "SIMULATED" in md
-    assert "p (holm)" in md
+    assert "p (perm, holm)" in md
+    assert "Does it generalize beyond this suite?" in md
     assert "`variant`" in md and "`baseline`" in md
 
 
