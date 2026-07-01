@@ -6,6 +6,8 @@ All notable changes to cc-bench are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-01
+
 ### Changed
 - **Scope-honest statistics.** Found by our own adversarial review: pooling reps
   across tasks as iid could turn one deterministic task flip into p < 0.001,
@@ -59,5 +61,6 @@ First public release.
 - 64 tests including a seeded **calibration** proof; sample suites in Python and
   JavaScript; MIT licensed.
 
-[Unreleased]: https://github.com/Galou3/cc-bench/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Galou3/cc-bench/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Galou3/cc-bench/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Galou3/cc-bench/releases/tag/v0.1.0

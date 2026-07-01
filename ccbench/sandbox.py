@@ -13,6 +13,8 @@ def wrap_command(cmd, workspace, *, mode="none", image=DEFAULT_IMAGE, network="n
     ``mode='docker'`` runs it in an ephemeral, auto-removed container with the
     workspace mounted at /work and network disabled by default, so grading (which
     executes arbitrary agent-produced code) cannot touch the host or the network.
+    Known limitation: on a harness timeout the docker client is killed but a
+    long-running container may linger (check `docker ps`).
     """
     cmd = list(cmd)
     if mode == "none":
