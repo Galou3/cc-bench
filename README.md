@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: Galou3/cc-bench@main
+      - uses: Galou3/cc-bench@v0.3.0
 ```
 
 ## Measure a real agent

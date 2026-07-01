@@ -14,7 +14,7 @@ tasks:
   - id: sum_list
     template_dir: tasks/sum_list/workspace
     reference_dir: tasks/sum_list/reference
-    verify_cmd: ["python", "-m", "pytest", "-q", "test_sumlist.py"]
+    verify_cmd: ["python", "test_sumlist.py"]
     timeout_s: 120
     tags: [starter]
     prompt: |
@@ -41,6 +41,13 @@ def test_skips_none():
 
 def test_empty():
     assert sum_list([]) == 0
+
+
+if __name__ == "__main__":
+    test_plain()
+    test_skips_none()
+    test_empty()
+    print("ok")
 """,
     "ccbench_suite/tasks/sum_list/reference/sumlist.py": """\
 def sum_list(xs):

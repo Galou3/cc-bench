@@ -46,3 +46,46 @@ platform's rules is excluded on purpose.
 - [ ] On a newcomer's first issue, prioritize **active maintainer participation** - the factor most robustly linked to long-term retention (E-value up to ~2.24); moderate discussion (~5-15 comments) helps weakly. ([arXiv - The First Issue Matters](https://arxiv.org/html/2603.27136v1))
 - [ ] Don't rely on a fast or upbeat first reply alone - a 2.7M-PR study found no link between speedy/positive first responses and future contributions; invest in **substantive review** instead. ([arXiv - Does the First Response Matter](https://arxiv.org/html/2104.02933v3))
 - [ ] Ship **semantic-versioned releases with a hand-curated, latest-first changelog** in Keep a Changelog format (Added/Changed/Deprecated/Removed/Fixed/Security + an Unreleased section); changelogs are for humans, so curate rather than fully automate. ([Keep a Changelog](https://keepachangelog.com/en/1.0.0/))
+
+---
+
+## Ready to execute (prepared, needs the maintainer)
+
+### Publish to PyPI (one-time, ~5 min)
+
+Both names verified free (2026-07-01): `cc-bench` and `ccbench`. Artifacts build
+clean and the wheel passed a pristine-venv test (version, doctor, selftest).
+
+```bash
+uv build                                    # dist/ already verified
+uv publish --token pypi-XXXX                # or: twine upload dist/*
+# then flip the README one-liner to: uvx cc-bench doctor
+```
+
+### awesome-claude-code submission (paste into their issue form)
+
+> **cc-bench** - Does your CLAUDE.md actually help? Audits your Claude Code /
+> Codex setup against cited evidence (`ccbench doctor`, score /100), then
+> A/B-tests config changes on your own repo with honest statistics (permutation
+> tests, confidence intervals, placebo control, "not proven" by default).
+> Zero-install: `uvx --from git+https://github.com/Galou3/cc-bench ccbench doctor`.
+> MIT. https://github.com/Galou3/cc-bench
+
+### GitHub Marketplace listing (Action)
+
+`action.yml` ships in the repo (pin `Galou3/cc-bench@v0.3.0`). To list it:
+repo page -> Releases -> draft release -> tick "Publish this Action to the
+GitHub Marketplace" -> category: Continuous integration.
+
+### Launch posts
+
+Show HN / Reddit / X drafts live in the session notes; the HN title:
+`Show HN: cc-bench - measure if your CLAUDE.md actually helps (CIs, not vibes)`.
+Post Tue-Thu 9am-12pm ET, maker comment within 5 minutes including one honest
+limitation (alpha; mock demo uses injected probabilities; real runs cost quota).
+
+### First content post (pre-registered)
+
+`experiments/001-superclaude-token-claim/PROTOCOL.md` is committed before any
+data: measuring SuperClaude's "30-50% fewer tokens" claim with held-out tasks
+and a success-rate guard. Running it needs maintainer quota (~$10-25).

@@ -6,6 +6,8 @@ All notable changes to cc-bench are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-01
+
 ### Added
 - Zero-install onboarding: `uvx --from git+... ccbench doctor` verified and now the
   first command in the README; PyPI names checked free for a proper release.
@@ -76,6 +78,7 @@ First public release.
 - 64 tests including a seeded **calibration** proof; sample suites in Python and
   JavaScript; MIT licensed.
 
-[Unreleased]: https://github.com/Galou3/cc-bench/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Galou3/cc-bench/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Galou3/cc-bench/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Galou3/cc-bench/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Galou3/cc-bench/releases/tag/v0.1.0
