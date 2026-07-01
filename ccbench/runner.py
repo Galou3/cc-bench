@@ -28,6 +28,9 @@ def run_suite(
     seed: int = 0,
     keep_workspaces: str | Path | None = None,
     progress: ProgressFn | None = None,
+    sandbox: str = "none",
+    sandbox_image: str = "python:3.12-slim",
+    sandbox_network: str = "none",
 ) -> SuiteRun:
     """Run every ``(condition, task, rep)`` and return a SuiteRun.
 
@@ -61,7 +64,9 @@ def run_suite(
                     # could not have read or overfit them.
                     if task.hidden_tests_dir:
                         add_files(ws, task.hidden_tests_dir)
-                    outcome, verify_detail = run_check(task, ws)
+                    outcome, verify_detail = run_check(
+                        task, ws, sandbox=sandbox, sandbox_image=sandbox_image,
+                        sandbox_network=sandbox_network)
                     wall = time.perf_counter() - t0
                 finally:
                     if tmp_holder is not None:
@@ -97,6 +102,9 @@ def run_suite_seeds(
     seeds: Sequence[int] = (0,),
     keep_workspaces: str | Path | None = None,
     progress: ProgressFn | None = None,
+    sandbox: str = "none",
+    sandbox_image: str = "python:3.12-slim",
+    sandbox_network: str = "none",
 ) -> SuiteRun:
     """Run the suite once per seed and merge the results into one SuiteRun.
 
@@ -108,7 +116,9 @@ def run_suite_seeds(
     suite_name = ""
     for s in seeds:
         run = run_suite(suite_dir, conditions, agent, reps=reps, seed=s,
-                        keep_workspaces=keep_workspaces, progress=progress)
+                        keep_workspaces=keep_workspaces, progress=progress,
+                        sandbox=sandbox, sandbox_image=sandbox_image,
+                        sandbox_network=sandbox_network)
         suite_name = run.suite
         all_results.extend(run.results)
     return SuiteRun(

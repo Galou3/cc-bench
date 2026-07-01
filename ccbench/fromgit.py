@@ -59,7 +59,10 @@ def make_task_from_commit(repo, sha, suite_dir, task_id, prompt=None) -> dict:
         d.mkdir(parents=True, exist_ok=True)
 
     with tarfile.open(fileobj=io.BytesIO(_git(repo, "archive", "--format=tar", f"{sha}~1"))) as tf:
-        tf.extractall(ws)
+        try:
+            tf.extractall(ws, filter="data")  # safe extraction (py3.12+/backports)
+        except TypeError:
+            tf.extractall(ws)
     for path in src:
         (ref / path).parent.mkdir(parents=True, exist_ok=True)
         (ref / path).write_bytes(_git(repo, "show", f"{sha}:{path}"))

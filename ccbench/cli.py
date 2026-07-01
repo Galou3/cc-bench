@@ -70,18 +70,20 @@ def _cmd_run(args: argparse.Namespace) -> int:
     agent = _build_agent(args)
     print(f"Running suite '{args.suite}' x {len(conditions)} conditions x {args.reps} reps "
           f"with agent '{agent.name}'...")
+    sbox = dict(sandbox=args.sandbox, sandbox_image=args.sandbox_image,
+                sandbox_network=args.sandbox_network)
     if args.seeds:
         seeds = [int(s) for s in args.seeds.split(",") if s.strip() != ""]
         run = run_suite_seeds(
             args.suite, conditions, agent,
             reps=args.reps, seeds=seeds,
-            keep_workspaces=args.keep_workspaces, progress=_progress,
+            keep_workspaces=args.keep_workspaces, progress=_progress, **sbox,
         )
     else:
         run = run_suite(
             args.suite, conditions, agent,
             reps=args.reps, seed=args.seed,
-            keep_workspaces=args.keep_workspaces, progress=_progress,
+            keep_workspaces=args.keep_workspaces, progress=_progress, **sbox,
         )
     out_dir = save_run(run, args.out)
     _print_summary(run, args.confidence, args.correction)
@@ -196,6 +198,10 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--report", action="store_true", help="print the full Markdown report after running")
     r.add_argument("--keep-workspaces", default=None, help="keep run workspaces under this dir (debug)")
     r.add_argument("--mock-base-prob", type=float, default=0.5, help="mock fallback success probability")
+    r.add_argument("--sandbox", default="none", choices=["none", "docker"],
+                   help="run grading inside a sandbox (docker: isolated, no network)")
+    r.add_argument("--sandbox-image", default="python:3.12-slim")
+    r.add_argument("--sandbox-network", default="none", help="docker --network value (default: none)")
     r.add_argument("--model", default=None, help="model for the claude agent")
     r.add_argument("--permission-mode", default="acceptEdits", help="claude --permission-mode")
     r.add_argument("--allowed-tools", default="Edit,Write,Read", help="claude --allowedTools")

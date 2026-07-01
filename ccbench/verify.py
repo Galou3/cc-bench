@@ -6,19 +6,24 @@ from pathlib import Path
 import subprocess
 
 from .models import Outcome, Task
+from .sandbox import wrap_command
 
 VERIFY_TAIL_LINES = 15
 
 
-def run_check(task: Task, workspace: str | Path) -> tuple[Outcome, str]:
+def run_check(task: Task, workspace: str | Path, sandbox: str = "none",
+              sandbox_image: str = "python:3.12-slim",
+              sandbox_network: str = "none") -> tuple[Outcome, str]:
     """Run the task's verify command and return ``(outcome, detail)``.
 
     ``detail`` is the last few lines of combined stdout/stderr (or the error
     message), enough to see *why* a run failed without storing megabytes of logs.
     """
+    cmd = wrap_command(task.verify_cmd, workspace, mode=sandbox,
+                       image=sandbox_image, network=sandbox_network)
     try:
         proc = subprocess.run(
-            task.verify_cmd,
+            cmd,
             cwd=str(workspace),
             capture_output=True,
             text=True,
