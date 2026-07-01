@@ -7,7 +7,7 @@ tasks:
   - id: fizzbuzz_js
     template_dir: tasks/fizzbuzz/workspace
     reference_dir: tasks/fizzbuzz/reference
-    verify_cmd: ["node", "--test"]
+    verify_cmd: ["node", "--test", "fizzbuzz.test.js"]
     timeout_s: 120
     tags: [javascript, logic]
     prompt: |

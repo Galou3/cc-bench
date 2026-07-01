@@ -14,7 +14,7 @@ tasks:
   - id: sum_list
     template_dir: tasks/sum_list/workspace
     reference_dir: tasks/sum_list/reference
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_sumlist.py"]
     timeout_s: 120
     tags: [starter]
     prompt: |

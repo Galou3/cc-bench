@@ -90,7 +90,7 @@ flowchart LR
   C --> R[runner: task x condition x rep, isolated workspace]
   R --> AG[agent adapter: mock / claude / codex]
   AG --> G[grader: run verify_cmd -> pass/fail]
-  G --> AN[analysis: Wilson CI, bootstrap diff, Holm/BH]
+  G --> AN[analysis: stratified permutation, CIs, Holm/BH]
   AN --> RP[report: Markdown + CSV + verdict]
 ```
 
@@ -216,7 +216,7 @@ language-agnostic.
 | `ccbench/` | library: models, suite, workspace, verify, agents, runner, analysis, report, cli |
 | `suites/sample/` | 3-task offline demo suite |
 | `conditions/` | baseline / with-claude-md / bloated-context |
-| `tests/` | 41 tests incl. the calibration proof |
+| `tests/` | the test suite, incl. calibration and anti-tampering proofs |
 | `EVIDENCE.md` | 40 cited sources behind every recommendation |
 | `METHODOLOGY.md` | stats + threats to validity |
 | `.github/workflows/ci.yml` | CI: pytest 3.10-3.12 + mock smoke on every push |

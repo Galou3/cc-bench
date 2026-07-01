@@ -17,6 +17,7 @@ from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
 from .suite import SuiteError, load_conditions
+from .validate import validate_suite
 
 
 def _build_agent(args: argparse.Namespace):
@@ -147,20 +148,50 @@ def _cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _validate_and_report(suite_dir: str, task_id: str) -> int:
+    v = validate_suite(suite_dir, only_task=task_id)[0]
+    if v.ok:
+        print(f"  [ok] task discriminates: workspace fails, reference passes ({v.detail})")
+        return 0
+    print(f"  [BROKEN] task does not discriminate ({v.detail})")
+    print("  fix the task before benchmarking with it; a non-discriminating task"
+          " only adds noise.")
+    return 1
+
+
 def _cmd_from_repo(args: argparse.Namespace) -> int:
     entry = make_task(args.module, args.test, args.out, args.id, prompt=args.prompt)
     add_task_to_suite(args.out, entry, args.suite_name)
     print(f"created held-out task '{args.id}' in suite {args.out}")
+    rc = _validate_and_report(args.out, args.id)
     print(f"  try: ccbench run --suite {args.out} --conditions conditions --agent mock --reps 5")
-    return 0
+    return rc
 
 
 def _cmd_from_git(args: argparse.Namespace) -> int:
     entry = make_task_from_commit(args.repo, args.commit, args.out, args.id, prompt=args.prompt)
     add_task_to_suite(args.out, entry, args.suite_name)
     print(f"created held-out task '{args.id}' from commit {args.commit[:8]} in {args.out}")
+    rc = _validate_and_report(args.out, args.id)
     print(f"  try: ccbench run --suite {args.out} --conditions conditions --agent mock --reps 5")
-    return 0
+    return rc
+
+
+def _cmd_validate(args: argparse.Namespace) -> int:
+    results = validate_suite(args.suite, only_task=args.task)
+    if not results:
+        print("no matching tasks found")
+        return 2
+    bad = 0
+    for v in results:
+        flag = "[ok]    " if v.ok else "[BROKEN]"
+        ref = "-" if v.reference_passes is None else str(v.reference_passes).lower()
+        print(f"  {flag} {v.task_id:24} stub_fails={str(v.stub_fails).lower():5} "
+              f"reference_passes={ref:5} ({v.detail})")
+        bad += not v.ok
+    print(f"\n{len(results) - bad}/{len(results)} task(s) well-formed"
+          + ("" if not bad else f"; {bad} BROKEN"))
+    return 1 if bad else 0
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
@@ -255,6 +286,11 @@ def build_parser() -> argparse.ArgumentParser:
     fg.add_argument("--suite-name", default="from-git")
     fg.add_argument("--prompt", default=None)
     fg.set_defaults(func=_cmd_from_git)
+
+    val = sub.add_parser("validate", help="check every task discriminates (stub fails, reference passes)")
+    val.add_argument("--suite", required=True, help="suite directory to validate")
+    val.add_argument("--task", default=None, help="validate a single task id")
+    val.set_defaults(func=_cmd_validate)
 
     doc = sub.add_parser("doctor", help="audit a Claude Code setup against the evidence")
     doc.add_argument("--dir", default=".", help="project root to audit (default: cwd)")

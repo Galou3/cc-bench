@@ -9,7 +9,7 @@ easy to trust - contributions that keep it that way are very welcome.
 git clone https://github.com/Galou3/cc-bench
 cd cc-bench
 pip install -e ".[dev]"
-pytest -q                  # 41 tests, ~16s, no network
+pytest -q                  # full suite, fast, no network
 ccbench run --suite suites/sample --conditions conditions --agent mock --reps 5
 ```
 

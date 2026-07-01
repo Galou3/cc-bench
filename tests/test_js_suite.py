@@ -14,7 +14,7 @@ SUITE = Path(__file__).resolve().parents[1] / "suites" / "js_sample"
 def test_js_suite_loads():
     name, tasks = load_suite(SUITE)
     assert name == "js_sample" and tasks[0].id == "fizzbuzz_js"
-    assert tasks[0].verify_cmd == ["node", "--test"]
+    assert tasks[0].verify_cmd == ["node", "--test", "fizzbuzz.test.js"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")

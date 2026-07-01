@@ -7,8 +7,8 @@ import io
 from typing import Sequence
 
 from .analysis import (
-    adjust_pvalues, compare, compare_all_stratified, distinct_seeds,
-    pass_at_k_mean, robustness, summarize_condition,
+    adjust_pvalues, compare_all_stratified, compare_stratified, count_outcomes,
+    distinct_seeds, pass_at_k_mean, robustness, summarize_condition,
 )
 from .models import Condition, RunResult, SuiteRun
 
@@ -241,9 +241,9 @@ def render_run_comparison(
     for c in shared:
         rows.append((c, run_a.for_condition(c), run_b.for_condition(c)))
 
-    comps = [compare(a, b, label_a, label_b, confidence=confidence,
-                     bootstrap_iters=bootstrap_iters, seed=seed) for _, a, b in rows]
-    adj = adjust_pvalues([c.p_value for c in comps], correction)
+    comps = [compare_stratified(a, b, label_a, label_b, confidence=confidence,
+                                iters=bootstrap_iters, seed=seed) for _, a, b in rows]
+    adj = adjust_pvalues([c.perm_p for c in comps], correction)
 
     lines = [f"# cc-bench - {label_a} vs {label_b}", ""]
     lines.append(f"- {label_a}: suite=`{run_a.suite}` agent=`{run_a.agent}` n={len(run_a.results)}")
@@ -256,25 +256,32 @@ def render_run_comparison(
         lines.append("> **Note:** a `mock` run uses injected probabilities; it demonstrates the "
                      "harness, it is not a real measurement.\n")
 
-    lines.append(f"| Scope | {label_a} | {label_b} | delta ({label_b}-{label_a}) | "
-                 f"{pct}% CI | p ({correction}) | verdict |")
-    lines.append("|---|---:|---:|---:|---:|---:|:--|")
-    for (scope, _, _), c, padj in zip(rows, comps, adj):
-        ci_excludes_zero = c.diff_ci_low > 0 or c.diff_ci_high < 0
+    lines.append(f"| Scope | {label_a} | {label_b} | delta/task ({label_b}-{label_a}) | "
+                 f"{pct}% CI | p (perm, {correction}) | tasks +/=/- | verdict |")
+    lines.append("|---|---:|---:|---:|---:|---:|:---:|:--|")
+    for (scope, res_a, res_b), c, padj in zip(rows, comps, adj):
+        ca, cb = count_outcomes(res_a), count_outcomes(res_b)
+        rate_a = ca.passes / ca.decided if ca.decided else 0.0
+        rate_b = cb.passes / cb.decided if cb.decided else 0.0
+        ci_excludes_zero = c.ci_low > 0 or c.ci_high < 0
         sig = ci_excludes_zero and padj < alpha
-        if sig and c.diff > 0:
+        if sig and c.mean_diff > 0:
             verdict = f"[+] {label_b} better"
-        elif sig and c.diff < 0:
+        elif sig and c.mean_diff < 0:
             verdict = f"[-] {label_a} better"
         else:
             verdict = "[~] not proven"
         lines.append(
-            f"| {scope} | {c.rate_baseline:.1%} | {c.rate_variant:.1%} | {c.diff:+.1%} | "
-            f"[{c.diff_ci_low:+.1%}, {c.diff_ci_high:+.1%}] | {padj:.4f} | {verdict} |"
+            f"| {scope} | {rate_a:.1%} | {rate_b:.1%} | {c.mean_diff:+.1%} | "
+            f"[{c.ci_low:+.1%}, {c.ci_high:+.1%}] | {padj:.4f} | "
+            f"{c.tasks_improved}/{c.tasks_tied}/{c.tasks_regressed} | {verdict} |"
         )
     lines.append("")
-    lines.append(f"_delta is {label_b} minus {label_a}; a winner is declared only when the CI "
-                 f"excludes 0 **and** the {correction}-adjusted p < {alpha:.2f}._")
+    lines.append(f"_delta is the mean per-task change ({label_b} minus {label_a}); the p-value "
+                 "is a permutation test stratified by task, so task difficulty and run "
+                 f"clustering cannot fake a difference. A winner needs the CI to exclude 0 "
+                 f"**and** the {correction}-adjusted p < {alpha:.2f}, and the claim covers the "
+                 "shared tasks only._")
     return "\n".join(lines)
 
 

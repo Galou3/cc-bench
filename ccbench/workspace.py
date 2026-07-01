@@ -50,6 +50,30 @@ def add_files(workspace: str | Path, src_dir: str | Path) -> None:
     shutil.copytree(Path(src_dir), Path(workspace), dirs_exist_ok=True)
 
 
+TEST_FILE_PATTERNS = ("test_*.py", "*_test.py", "*.test.js", "*_test.go", "*Test.java")
+
+
+def restore_protected_files(template_dir: str | Path, workspace: str | Path) -> list[str]:
+    """Restore the template's test files over the workspace, post-agent.
+
+    An agent that rewrites visible tests to always pass would otherwise grade as
+    PASS (reward hacking). Grading must run the ORIGINAL tests, so any template
+    file matching a test pattern is copied back before verification.
+    """
+    tpl, ws = Path(template_dir), Path(workspace)
+    restored: list[str] = []
+    for pattern in TEST_FILE_PATTERNS:
+        for f in tpl.rglob(pattern):
+            if not f.is_file():
+                continue
+            rel = f.relative_to(tpl)
+            dest = ws / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(f, dest)
+            restored.append(str(rel))
+    return restored
+
+
 def _is_within(root: str | Path, target: str | Path) -> bool:
     root_resolved = Path(root).resolve()
     try:
@@ -59,4 +83,5 @@ def _is_within(root: str | Path, target: str | Path) -> bool:
         return False
 
 
-__all__ = ["prepare_workspace", "apply_condition", "add_files"]
+__all__ = ["prepare_workspace", "apply_condition", "add_files",
+           "restore_protected_files", "TEST_FILE_PATTERNS"]

@@ -14,7 +14,7 @@ from .agents.base import Agent, RunContext
 from .models import Condition, RunResult, SuiteRun
 from .suite import load_suite
 from .verify import run_check
-from .workspace import add_files, apply_condition, prepare_workspace
+from .workspace import add_files, apply_condition, prepare_workspace, restore_protected_files
 
 ProgressFn = Callable[[int, int, RunResult], None]
 
@@ -60,8 +60,10 @@ def run_suite(
                     ctx = RunContext(task=task, condition=cond, workspace=ws, rep=rep, seed=seed)
                     t0 = time.perf_counter()
                     info = agent.run(ctx)
-                    # Held-out tests land only now, after the agent is done, so it
-                    # could not have read or overfit them.
+                    # Post-agent, pre-grading: restore the template's test files
+                    # (an agent must not grade against tests it rewrote), then
+                    # overlay held-out tests the agent never saw.
+                    restore_protected_files(task.template_dir, ws)
                     if task.hidden_tests_dir:
                         add_files(ws, task.hidden_tests_dir)
                     outcome, verify_detail = run_check(

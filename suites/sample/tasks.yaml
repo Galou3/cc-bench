@@ -11,7 +11,7 @@ tasks:
   - id: fizzbuzz
     template_dir: tasks/fizzbuzz/workspace
     reference_dir: tasks/fizzbuzz/reference
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_fizzbuzz.py"]
     timeout_s: 120
     tags: [logic, easy]
     prompt: |
@@ -23,7 +23,7 @@ tasks:
   - id: parse_version
     template_dir: tasks/parse_version/workspace
     reference_dir: tasks/parse_version/reference
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_version.py"]
     timeout_s: 120
     tags: [parsing, easy]
     prompt: |
@@ -35,7 +35,7 @@ tasks:
   - id: dedup_stable
     template_dir: tasks/dedup_stable/workspace
     reference_dir: tasks/dedup_stable/reference
-    verify_cmd: ["python", "-m", "pytest", "-q"]
+    verify_cmd: ["python", "-m", "pytest", "-q", "test_dedup.py"]
     timeout_s: 120
     tags: [logic, easy]
     prompt: |
