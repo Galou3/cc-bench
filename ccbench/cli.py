@@ -12,6 +12,7 @@ from .agents import available_agents, make_agent
 from .analysis import compare_all, distinct_seeds, robustness, summarize_condition
 from .doctor import apply_fixes, audit, health_score, render as render_doctor, summary as doctor_summary
 from .fromrepo import add_task_to_suite, make_task
+from .fromgit import make_task_from_commit
 from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
@@ -149,6 +150,14 @@ def _cmd_from_repo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_from_git(args: argparse.Namespace) -> int:
+    entry = make_task_from_commit(args.repo, args.commit, args.out, args.id, prompt=args.prompt)
+    add_task_to_suite(args.out, entry, args.suite_name)
+    print(f"created held-out task '{args.id}' from commit {args.commit[:8]} in {args.out}")
+    print(f"  try: ccbench run --suite {args.out} --conditions conditions --agent mock --reps 5")
+    return 0
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     findings = audit(args.dir)
     if args.fix:
@@ -228,6 +237,15 @@ def build_parser() -> argparse.ArgumentParser:
     fr.add_argument("--suite-name", default="from-repo")
     fr.add_argument("--prompt", default=None)
     fr.set_defaults(func=_cmd_from_repo)
+
+    fg = sub.add_parser("from-git", help="build a held-out task from a repo's git commit")
+    fg.add_argument("--repo", default=".", help="path to the git repo")
+    fg.add_argument("--commit", required=True, help="a commit that changed source AND tests")
+    fg.add_argument("--id", required=True, help="task id")
+    fg.add_argument("--out", default="ccbench_suite", help="suite directory to create/update")
+    fg.add_argument("--suite-name", default="from-git")
+    fg.add_argument("--prompt", default=None)
+    fg.set_defaults(func=_cmd_from_git)
 
     doc = sub.add_parser("doctor", help="audit a Claude Code setup against the evidence")
     doc.add_argument("--dir", default=".", help="project root to audit (default: cwd)")

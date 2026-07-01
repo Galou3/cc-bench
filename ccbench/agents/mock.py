@@ -39,10 +39,8 @@ class MockAgent:
         success = draw < prob
 
         if success and ctx.task.reference_dir:
-            # Make the code genuinely correct rather than spoofing a pass.
-            for f in Path(ctx.task.reference_dir).iterdir():
-                if f.is_file():
-                    shutil.copy(f, Path(ctx.workspace) / f.name)
+            # Apply the real fix (preserving nested paths), never spoof a pass.
+            shutil.copytree(ctx.task.reference_dir, ctx.workspace, dirs_exist_ok=True)
 
         # Plausible-but-fake usage so reports have something to aggregate; cost is
         # always 0 - the mock never touches a paid API.
