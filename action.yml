@@ -1,0 +1,27 @@
+name: 'cc-bench doctor'
+description: 'Evidence-cited audit of CLAUDE.md / AGENTS.md / .claude settings. Fails the job on blocking issues.'
+author: 'Galou3'
+branding:
+  icon: 'check-circle'
+  color: 'green'
+inputs:
+  path:
+    description: 'Project root to audit'
+    required: false
+    default: '.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install cc-bench
+      shell: bash
+      run: pip install --quiet "git+https://github.com/Galou3/cc-bench@main"
+    - name: Audit setup
+      shell: bash
+      run: |
+        set -o pipefail
+        {
+          echo '## cc-bench doctor'
+          echo '```'
+          ccbench doctor --dir "${{ inputs.path }}"
+          echo '```'
+        } | tee -a "$GITHUB_STEP_SUMMARY"

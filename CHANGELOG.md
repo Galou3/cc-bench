@@ -6,6 +6,21 @@ All notable changes to cc-bench are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Zero-install onboarding: `uvx --from git+... ccbench doctor` verified and now the
+  first command in the README; PyPI names checked free for a proper release.
+- `ccbench selftest`: proves in ~1 min, offline, that the harness recovers a
+  planted +50pp effect (the anti-"broken instrument" check).
+- `ccbench power`: sample-size floor before you spend tokens (normal
+  approximation, labeled as a floor).
+- Shareable single-file HTML report (`--html` on run/report) with verdict chips
+  and CI bars; example in `examples/sample-report.html`.
+- `ccbench doctor --badge`: shields.io endpoint badge (setup score /100) with a
+  ready-to-paste embed snippet.
+- Bundled GitHub Action (`action.yml`): audits PRs touching CLAUDE.md / AGENTS.md
+  / .claude/** and fails on blocking issues.
+- Named headline metric: **config lift** (defined in the README).
+
 ## [0.2.0] - 2026-07-01
 
 ### Changed

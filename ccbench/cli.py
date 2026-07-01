@@ -10,10 +10,12 @@ from pathlib import Path
 
 from . import __version__
 from .agents import available_agents, make_agent
-from .analysis import compare_all_stratified, distinct_seeds, robustness, summarize_condition
+from .analysis import (compare_all_stratified, compare_stratified, distinct_seeds,
+                       robustness, sample_size_two_proportions, summarize_condition)
 from .doctor import apply_fixes, audit, health_score, render as render_doctor, summary as doctor_summary
 from .fromrepo import add_task_to_suite, make_task
 from .fromgit import make_task_from_commit
+from .htmlreport import render_html
 from .report import render_csv, render_markdown, render_run_comparison
 from .runner import load_run, run_suite, run_suite_seeds, save_run
 from .scaffold import next_steps, scaffold
@@ -93,6 +95,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
     out_dir = save_run(run, args.out)
     _print_summary(run, args.confidence, args.correction)
     print(f"\nSaved to {out_dir}  (mirror: {Path(args.out) / 'latest'})")
+    if args.html:
+        Path(args.html).write_text(
+            render_html(run, conditions, baseline=args.baseline,
+                        confidence=args.confidence, correction=args.correction),
+            encoding="utf-8")
+        print(f"Shareable report: {args.html}")
     if args.report:
         print("\n" + "=" * 70 + "\n")
         print(render_markdown(run, conditions, baseline=args.baseline,
@@ -115,6 +123,12 @@ def _cmd_report(args: argparse.Namespace) -> int:
     if args.csv:
         Path(args.csv).write_text(render_csv(run, args.confidence), encoding="utf-8")
         print(f"wrote {args.csv}")
+    if args.html:
+        Path(args.html).write_text(
+            render_html(run, conditions, baseline=args.baseline,
+                        confidence=args.confidence, correction=args.correction),
+            encoding="utf-8")
+        print(f"wrote {args.html}")
     return 0
 
 
@@ -209,7 +223,62 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                           "findings": [f.to_dict() for f in findings]}, indent=2))
     else:
         print(render_doctor(findings, args.dir))
+    if args.badge:
+        score = health_score(findings)
+        color = ("brightgreen" if score >= 90 else "green" if score >= 70
+                 else "yellow" if score >= 50 else "red")
+        badge = {"schemaVersion": 1, "label": "cc-bench setup",
+                 "message": f"{score}/100", "color": color}
+        path = Path(args.badge)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(badge), encoding="utf-8")
+        print(f"\nbadge written to {path}. Commit it, then embed:")
+        print("  ![cc-bench](https://img.shields.io/endpoint?url="
+              f"https://raw.githubusercontent.com/USER/REPO/main/{path.as_posix()})")
     return 1 if doctor_summary(findings)["fail"] else 0
+
+
+def _cmd_power(args: argparse.Namespace) -> int:
+    p1 = args.baseline
+    p2 = min(0.999, max(0.001, p1 + args.effect))
+    n = sample_size_two_proportions(p1, p2, alpha=args.alpha, power=args.power)
+    print(f"To detect {p1:.0%} vs {p2:.0%} (effect {args.effect:+.0%}) at "
+          f"alpha={args.alpha}, power={args.power}:")
+    print(f"  ~{n} decided runs per condition")
+    if args.tasks:
+        reps = -(-n // args.tasks)
+        print(f"  = {args.tasks} tasks x {reps} reps per condition")
+    print("This is a normal-approximation FLOOR: task heterogeneity and run "
+          "clustering need more. Below it, expect 'not proven'.")
+    return 0
+
+
+def _cmd_selftest(args: argparse.Namespace) -> int:
+    import tempfile
+
+    from .models import Condition as Cond
+
+    tmp = tempfile.mkdtemp(prefix="ccbench_selftest_")
+    scaffold(tmp)
+    conds = [Cond(name="baseline", metadata={"mock_success_prob": 0.40}),
+             Cond(name="boosted", metadata={"mock_success_prob": 0.90})]
+    print(f"selftest: running the bundled mock pipeline ({2 * args.reps} runs)...")
+    run = run_suite(Path(tmp) / "ccbench_suite", conds, make_agent("mock"),
+                    reps=args.reps, seed=0, progress=_progress)
+    c = compare_stratified(run.for_condition("baseline"), run.for_condition("boosted"),
+                           "baseline", "boosted", iters=4000, seed=0)
+    rate_b = summarize_condition(run.for_condition("baseline"), "baseline").rate
+    rate_t = summarize_condition(run.for_condition("boosted"), "boosted").rate
+    ok = (c.verdict == "improvement" and 0.15 <= rate_b <= 0.65 and rate_t >= 0.75)
+    if ok:
+        print(f"\nselftest OK: planted +50pp effect recovered as a significant "
+              f"improvement ({rate_b:.0%} -> {rate_t:.0%}, perm p = {c.perm_p:.4f}).")
+        return 0
+    print(f"\nselftest FAILED: baseline={rate_b:.0%} boosted={rate_t:.0%} "
+          f"verdict={c.verdict} p={c.perm_p:.4f}")
+    print("The harness did not recover a planted effect; do not trust runs until "
+          "this passes. Please open an issue with this output.")
+    return 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -231,6 +300,7 @@ def build_parser() -> argparse.ArgumentParser:
                    help="multiple-comparison correction for variant p-values")
     r.add_argument("--baseline", default=None, help="baseline condition name (default: 'baseline' or first)")
     r.add_argument("--report", action="store_true", help="print the full Markdown report after running")
+    r.add_argument("--html", default=None, help="write a shareable single-file HTML report here")
     r.add_argument("--keep-workspaces", default=None, help="keep run workspaces under this dir (debug)")
     r.add_argument("--mock-base-prob", type=float, default=0.5, help="mock fallback success probability")
     r.add_argument("--sandbox", default="none", choices=["none", "docker"],
@@ -251,6 +321,7 @@ def build_parser() -> argparse.ArgumentParser:
                      help="multiple-comparison correction for variant p-values")
     rep.add_argument("--out", default=None, help="write Markdown here instead of stdout")
     rep.add_argument("--csv", default=None, help="also write a per-condition CSV here")
+    rep.add_argument("--html", default=None, help="also write a shareable single-file HTML report")
     rep.set_defaults(func=_cmd_report)
 
     cmp = sub.add_parser("compare", help="compare two saved runs (e.g. claude vs codex)")
@@ -297,7 +368,21 @@ def build_parser() -> argparse.ArgumentParser:
     doc.add_argument("--dir", default=".", help="project root to audit (default: cwd)")
     doc.add_argument("--fix", action="store_true", help="apply safe auto-fixes (e.g. add a starter CLAUDE.md)")
     doc.add_argument("--json", action="store_true", help="emit findings as JSON")
+    doc.add_argument("--badge", default=None,
+                     help="write a shields.io endpoint badge JSON here (e.g. .ccbench/badge.json)")
     doc.set_defaults(func=_cmd_doctor)
+
+    pw = sub.add_parser("power", help="how many runs before an effect is even detectable")
+    pw.add_argument("--baseline", type=float, required=True, help="expected baseline pass rate (0-1)")
+    pw.add_argument("--effect", type=float, required=True, help="effect size to detect, e.g. 0.15 for +15pp")
+    pw.add_argument("--tasks", type=int, default=None, help="tasks in your suite (prints reps per task)")
+    pw.add_argument("--alpha", type=float, default=0.05)
+    pw.add_argument("--power", type=float, default=0.8)
+    pw.set_defaults(func=_cmd_power)
+
+    st = sub.add_parser("selftest", help="verify the harness recovers a planted effect (offline, ~1 min)")
+    st.add_argument("--reps", type=int, default=25)
+    st.set_defaults(func=_cmd_selftest)
 
     return p
 

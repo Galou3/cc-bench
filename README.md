@@ -1,15 +1,19 @@
 # cc-bench
 
-**Make Claude Code & Codex measurably better - audit, fix, prove.**
+**Does your `CLAUDE.md` actually help? A score and a confidence interval, not vibes.**
+
+```bash
+uvx --from git+https://github.com/Galou3/cc-bench ccbench doctor
+```
 
 [![CI](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/Galou3/cc-bench/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-cc-bench finds what's quietly holding your AI coder back - a bloated `CLAUDE.md`, a
-misconfigured setup - and fixes it in one command. When you want proof a change
-*actually* helps, it measures it on your own tasks (real statistics underneath, for
-when you ask "but does it really work?").
+One zero-install command audits your Claude Code / Codex setup against cited
+evidence and scores it /100. Then, when you want proof a config change *actually*
+helps, cc-bench turns your own repo into a benchmark and answers with a
+confidence interval - or an honest "not proven".
 
 > **Status: alpha.** The mock pipeline runs end-to-end today with zero API cost;
 > the real `claude` adapter works and an experimental `codex` adapter is included.
@@ -24,9 +28,14 @@ Your AI coder's output depends on *how it's set up* - yet most "best practices"
 checks. Start by fixing yours:
 
 ```bash
-pip install -e .
+# zero-install (uv):
+uvx --from git+https://github.com/Galou3/cc-bench ccbench doctor
+
+# or classic:
+pip install git+https://github.com/Galou3/cc-bench
 ccbench doctor          # audit your CLAUDE.md / AGENTS.md / settings.json
 ccbench doctor --fix    # apply safe fixes (e.g. drop a concise starter CLAUDE.md)
+ccbench doctor --badge .ccbench/badge.json   # shields.io badge for your README
 ```
 
 `doctor` flags what's likely costing you quality - a 600-line `CLAUDE.md`, a broken
@@ -140,6 +149,37 @@ flowchart TD
 Full rationale and limits in [`METHODOLOGY.md`](METHODOLOGY.md). Prior art and how
 cc-bench differs in [`PRIOR_ART.md`](PRIOR_ART.md).
 
+## The metric: config lift
+
+**Config lift** = the mean per-task change in pass rate between two setups on the
+same suite, reported with a within-task bootstrap CI and a within-task permutation
+p-value (Holm-adjusted across variants). A lift is only called real when the CI
+excludes 0 AND p < 0.05; generalization beyond the suite is judged separately by a
+sign test on task flips. Plan your sample size with `ccbench power --baseline 0.4
+--effect 0.15`, and verify your install recovers a planted +50pp lift with one
+command:
+
+```bash
+ccbench selftest    # offline, ~1 min: must print "selftest OK"
+```
+
+## Guard your config in CI
+
+Add the bundled GitHub Action so every PR touching your agent config gets audited
+(free, no API key):
+
+```yaml
+on:
+  pull_request:
+    paths: ["CLAUDE.md", "AGENTS.md", ".claude/**"]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Galou3/cc-bench@main
+```
+
 ## Measure a real agent
 
 ```bash
@@ -207,7 +247,9 @@ language-agnostic.
 | `ccbench run --agent mock\|claude\|codex` | run a suite across conditions; save a report |
 | `ccbench run --seeds 0,1,2` | multi-seed run -> robustness (mean +/- SD per condition) |
 | `ccbench compare runA runB` | head-to-head of two runs (e.g. **claude vs codex**) |
-| `ccbench report <dir>` | render Markdown/CSV from a saved run |
+| `ccbench report <dir> [--html r.html]` | render Markdown/CSV/shareable HTML from a saved run |
+| `ccbench power --baseline 0.4 --effect 0.15` | runs needed before an effect is even detectable |
+| `ccbench selftest` | prove your install recovers a planted effect (offline) |
 | `ccbench agents` | list available agents |
 
 ## Project layout

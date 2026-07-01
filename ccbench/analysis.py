@@ -380,6 +380,22 @@ def pass_at_k_mean(results: Sequence[RunResult], k: int) -> float | None:
     return sum(vals) / len(vals)
 
 
+def sample_size_two_proportions(p1: float, p2: float,
+                                alpha: float = 0.05, power: float = 0.8) -> int:
+    """Decided runs per arm to detect p1 vs p2 (normal approximation, two-sided).
+
+    A floor, not a promise: task heterogeneity and run clustering need more.
+    """
+    if not (0 < p1 < 1 and 0 < p2 < 1) or p1 == p2:
+        raise ValueError("need 0 < p1, p2 < 1 and p1 != p2")
+    za = _norm_ppf(1 - alpha / 2)
+    zb = _norm_ppf(power)
+    pbar = (p1 + p2) / 2
+    num = (za * math.sqrt(2 * pbar * (1 - pbar))
+           + zb * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2
+    return math.ceil(num / (p2 - p1) ** 2)
+
+
 # --------------------------------------------------------------------------- #
 # Task-stratified inference (scope-honest verdicts)
 # --------------------------------------------------------------------------- #
@@ -636,4 +652,5 @@ __all__ = [
     "Robustness", "distinct_seeds", "robustness",
     "StratifiedComparison", "compare_stratified", "compare_all_stratified",
     "stratified_permutation_p", "within_task_bootstrap_ci", "task_sign_test",
+    "sample_size_two_proportions",
 ]
